@@ -26,6 +26,9 @@ export class Order {
   @Column('decimal', { precision: 20, scale: 8, default: 0 })
   filledAmount: number;
 
+  @Column('decimal', { precision: 20, scale: 8, nullable: true })
+  filledPrice: number;
+
   @Column({ default: 'pending' })
   status: 'pending' | 'filled' | 'cancelled' | 'partial';
 

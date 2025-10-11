@@ -113,9 +113,14 @@
 <script>
 import walletStore from '../store/walletStore'
 import { ethers } from 'ethers'
+import { usePrivy } from '../contexts/PrivyContext.js'
 
 export default {
   name: 'EthereumTransaction',
+  setup() {
+    const { signMessage } = usePrivy()
+    return { signMessage }
+  },
   data() {
     return {
       walletConnected: false,
@@ -258,10 +263,7 @@ export default {
       this.isSending = true
       
       try {
-        // 使用MetaMask签名
-        const provider = new ethers.BrowserProvider(window.ethereum)
-        const signer = await provider.getSigner()
-        
+        // 使用Privy钱包签名
         let message
         let transactionData
         
@@ -284,8 +286,11 @@ export default {
           }
         }
         
-        // 签名消息
-        const signature = await signer.signMessage(message)
+        // 使用Privy签名消息
+        const signature = await this.signMessage(message)
+        if (!signature) {
+          throw new Error('签名失败')
+        }
         transactionData.signature = signature
         
         // 调用后端API发送交易
@@ -363,12 +368,8 @@ export default {
     },
     
     connectWallet() {
-      // 触发钱包连接
-      if (window.ethereum) {
-        walletStore.connectWallet()
-      } else {
-        alert('请安装MetaMask钱包')
-      }
+      // 钱包连接通过Privy处理
+      console.log('请使用Privy登录')
     }
   }
 }
@@ -438,6 +439,12 @@ export default {
 .form-input.error {
   border-color: #ef4444;
   background: rgba(239, 68, 68, 0.05);
+}
+
+.form-input:disabled {
+  background-color: rgba(255, 255, 255, 0.02);
+  color: #94a3b8;
+  cursor: not-allowed;
 }
 
 .error-message {

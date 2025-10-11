@@ -77,6 +77,12 @@ export class Transaction {
   @Column({ nullable: true })
   txHash: string;
 
+  @Column({ nullable: true })
+  transactionHash: string;
+
+  @Column({ nullable: true })
+  toAddress: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

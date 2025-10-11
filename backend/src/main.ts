@@ -26,8 +26,8 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(3001);
-  console.log(`🚀 后端服务运行在 http://localhost:3001`);
-  console.log(`📚 API文档运行在 http://localhost:3001/api`);
+  await app.listen(3002);
+  console.log(`🚀 后端服务运行在 http://localhost:3002`);
+  console.log(`📚 API文档运行在 http://localhost:3002/api`);
 }
 bootstrap();

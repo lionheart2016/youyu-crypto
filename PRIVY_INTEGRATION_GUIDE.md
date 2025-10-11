@@ -29,7 +29,7 @@
 
 ### 4. 组件集成
 - 创建了 `frontend/src/components/PrivyWallet.vue` 专用组件
-- 修改了 `frontend/src/components/WalletConnect.vue` 支持MetaMask和Privy双钱包连接
+- 修改了 `frontend/src/components/WalletConnect.vue` 支持Privy钱包连接
 
 ### 5. 状态管理
 - 更新了 `frontend/src/store/walletStore.js` 支持Privy钱包类型
@@ -74,8 +74,7 @@ export const privyConfig = {
 
 ## 功能特性
 
-### 1. 双钱包支持
-- **MetaMask**: 传统浏览器钱包连接
+### 1. 钱包支持
 - **Privy**: 嵌入式钱包和社交登录
 
 ### 2. 统一界面
@@ -92,8 +91,7 @@ export const privyConfig = {
 
 ### 1. 连接钱包
 
-在导航栏点击钱包连接按钮，选择：
-- **MetaMask**: 连接浏览器扩展钱包
+在导航栏点击钱包连接按钮，选择Privy认证：
 - **Privy**: 使用嵌入式钱包或社交登录
 
 ### 2. 使用钱包上下文
@@ -149,9 +147,9 @@ const sendETH = async () => {
 
 ## 开发说明
 
-### 1. 当前实现状态
+### 2. 当前实现状态
 - ✅ 基础Privy上下文集成
-- ✅ 双钱包连接界面
+- ✅ Privy钱包连接界面
 - ✅ 状态管理和本地存储
 - ⚠️ 需要配置真实的Privy应用ID
 - ⚠️ 需要完善Privy SDK的实际集成

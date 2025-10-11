@@ -24,21 +24,38 @@ export const createPrivyContext = () => {
     
     if (event.data.type === 'PRIVY_AUTH_STATE') {
       console.log('处理认证状态消息:', event.data)
+      console.log('当前状态更新前:', {
+        isAuthenticated: isAuthenticated.value,
+        user: user.value,
+        walletAddress: walletAddress.value,
+        walletBalance: walletBalance.value
+      })
+      
       isAuthenticated.value = event.data.authenticated
       user.value = event.data.user
       if (event.data.authenticated && event.data.user) {
         walletAddress.value = event.data.user.walletAddress || ''
-        console.log('用户认证成功:', event.data.user)
+        walletBalance.value = event.data.user.balance || '0'
+        console.log('用户认证成功，状态更新后:', {
+          isAuthenticated: isAuthenticated.value,
+          user: user.value,
+          walletAddress: walletAddress.value,
+          walletBalance: walletBalance.value
+        })
         
-        // 认证成功后延迟隐藏iframe
-        setTimeout(() => {
-          hidePrivyIframe()
-          console.log('认证成功，已隐藏iframe')
-        }, 1000)
+        // 认证成功后立即隐藏iframe
+        hidePrivyIframe()
+        console.log('认证成功，已隐藏iframe')
       } else {
         walletAddress.value = ''
         walletBalance.value = '0'
-        console.log('用户已登出')
+        user.value = null
+        console.log('用户已登出，状态更新后:', {
+          isAuthenticated: isAuthenticated.value,
+          user: user.value,
+          walletAddress: walletAddress.value,
+          walletBalance: walletBalance.value
+        })
       }
     } else if (event.data.type === 'PRIVY_ERROR') {
       error.value = event.data.error
@@ -56,6 +73,12 @@ export const createPrivyContext = () => {
       
       // 设置iframe引用
       ready.value = true
+      
+      // 延迟同步状态，确保iframe已加载
+      setTimeout(() => {
+        syncAuthState()
+      }, 1000)
+      
       console.log('Privy初始化完成 - 通过iframe嵌入React应用')
       
     } catch (err) {
@@ -63,6 +86,33 @@ export const createPrivyContext = () => {
       error.value = err.message
       throw err
     }
+  }
+  
+  // 同步认证状态
+  const syncAuthState = () => {
+    if (!ready.value) {
+      console.log('Privy未就绪，跳过状态同步')
+      return
+    }
+    
+    console.log('发送状态同步请求到React应用')
+    
+    // 检查iframe是否已加载
+    if (iframeRef.value && iframeRef.value.contentWindow) {
+      iframeRef.value.contentWindow.postMessage({
+        type: 'SYNC_AUTH_STATE',
+        timestamp: Date.now()
+      }, 'http://localhost:3001')
+      console.log('状态同步请求已发送')
+    } else {
+      console.warn('iframe未准备好，无法发送同步请求')
+    }
+  }
+  
+  // 手动触发状态同步
+  const manualSync = () => {
+    console.log('手动触发状态同步')
+    syncAuthState()
   }
   
   // 检查认证状态
@@ -89,7 +139,14 @@ export const createPrivyContext = () => {
   const loginWithPrivy = async (method = 'wallet', options = {}) => {
     if (!ready.value) {
       console.error('Privy未就绪')
-      return
+      error.value = 'Privy认证系统未就绪，请刷新页面重试'
+      throw new Error('Privy未就绪')
+    }
+    
+    // 如果iframe已经在显示，先隐藏再重新显示，确保状态正确
+    if (showIframe.value) {
+      hidePrivyIframe()
+      await new Promise(resolve => setTimeout(resolve, 100))
     }
     
     try {
@@ -100,21 +157,29 @@ export const createPrivyContext = () => {
       showPrivyIframe()
       
       // 等待iframe加载完成
-      await new Promise(resolve => setTimeout(resolve, 500))
+      await new Promise(resolve => setTimeout(resolve, 1000))
       
-      // 通知React应用打开登录界面
-      if (iframeRef.value && iframeRef.value.contentWindow) {
-        iframeRef.value.contentWindow.postMessage({
-          type: 'OPEN_LOGIN_MODAL'
-        }, 'http://localhost:3001')
+      // 检查iframe是否已加载
+      if (!iframeRef.value || !iframeRef.value.contentWindow) {
+        throw new Error('iframe加载失败')
       }
       
-      console.log('已请求打开Privy登录界面')
+      // 通知React应用打开登录界面
+      iframeRef.value.contentWindow.postMessage({
+        type: 'OPEN_LOGIN_MODAL',
+        method: method,
+        options: options
+      }, 'http://localhost:3001')
+      
+      console.log('已请求打开Privy登录界面，方法:', method)
       
       return { success: true }
     } catch (err) {
       console.error('打开登录界面失败:', err)
       error.value = err.message
+      
+      // 发生错误时隐藏iframe
+      hidePrivyIframe()
       throw err
     } finally {
       loading.value = false
@@ -165,23 +230,12 @@ export const createPrivyContext = () => {
     try {
       console.log('处理Google登录:', googleUserData)
       
-      // 模拟Google登录过程
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      // 使用Privy进行真实Google登录
+      const result = await loginWithPrivy({ method: 'google' })
       
-      // 模拟认证成功
-      isAuthenticated.value = true
-      user.value = {
-        id: 'google-user-456',
-        email: 'google@example.com',
-        name: 'Google User',
-        walletAddress: '0x' + Math.random().toString(16).substr(2, 40)
-      }
-      walletAddress.value = user.value.walletAddress
-      walletBalance.value = '2.3'
+      console.log('Google登录成功:', result)
       
-      console.log('模拟Google登录成功')
-      
-      return user.value
+      return result
     } catch (error) {
       console.error('Google登录处理失败:', error)
       throw error
@@ -194,21 +248,10 @@ export const createPrivyContext = () => {
       loading.value = true
       error.value = null
       
-      // 模拟邮箱登录过程
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      // 使用Privy进行真实邮箱登录
+      const result = await loginWithPrivy({ method: 'email', email })
       
-      // 模拟认证成功
-      isAuthenticated.value = true
-      user.value = {
-        id: 'email-user-789',
-        email: email,
-        name: 'Email User',
-        walletAddress: '0x' + Math.random().toString(16).substr(2, 40)
-      }
-      walletAddress.value = user.value.walletAddress
-      walletBalance.value = '0.8'
-      
-      console.log('模拟邮箱登录成功')
+      console.log('邮箱登录成功:', result)
       
       return { success: true }
     } catch (err) {
@@ -236,10 +279,10 @@ export const createPrivyContext = () => {
       loading.value = true
       error.value = null
       
-      // 模拟发送验证码过程
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // 使用Privy发送真实邮箱验证码
+      const result = await loginWithPrivy({ method: 'email', email })
       
-      console.log('模拟邮箱验证码发送成功')
+      console.log('邮箱验证码发送成功:', result)
       
       return { success: true }
     } catch (err) {
@@ -261,7 +304,7 @@ export const createPrivyContext = () => {
     return user.value
   }
   
-  // 模拟发送交易
+  // 发送真实区块链交易
   const sendTransactionWithPrivy = async (transaction) => {
     if (!isAuthenticated.value) {
       throw new Error('用户未认证')
@@ -271,17 +314,25 @@ export const createPrivyContext = () => {
       loading.value = true
       error.value = null
       
-      // 模拟交易发送过程
-      await new Promise(resolve => setTimeout(resolve, 3000))
-      
-      // 模拟交易结果
-      const result = {
-        hash: '0x' + Math.random().toString(16).substr(2, 64),
-        status: 'success',
-        blockNumber: Math.floor(Math.random() * 1000000)
+      // 检查是否有真实的钱包连接
+      if (!currentWallet.value || !walletAddress.value) {
+        throw new Error('请先连接钱包')
       }
       
-      console.log('模拟交易发送成功:', result)
+      // 构建交易参数
+      const txParams = {
+        from: walletAddress.value,
+        to: transaction.to,
+        value: transaction.value ? BigInt(transaction.value).toString() : '0',
+        data: transaction.data || '0x',
+        gasLimit: transaction.gasLimit || '21000',
+        gasPrice: transaction.gasPrice || undefined
+      }
+      
+      // 发送真实交易
+      const result = await currentWallet.value.sendTransaction(txParams)
+      
+      console.log('真实交易发送成功:', result)
       
       return result
       
@@ -294,7 +345,7 @@ export const createPrivyContext = () => {
     }
   }
   
-  // 模拟签名消息
+  // 真实签名消息
   const signMessageWithPrivy = async (message) => {
     if (!isAuthenticated.value) {
       throw new Error('用户未认证')
@@ -304,12 +355,17 @@ export const createPrivyContext = () => {
       loading.value = true
       error.value = null
       
-      // 模拟签名过程
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      // 检查是否有真实的钱包连接
+      if (!currentWallet.value || !walletAddress.value) {
+        throw new Error('请先连接钱包')
+      }
       
-      // 模拟签名结果
-      const signature = '0x' + Math.random().toString(16).substr(2, 130)
-      console.log('模拟消息签名成功:', signature)
+      // 使用真实钱包签名
+      const signature = await currentWallet.value.signMessage({
+        message: message
+      })
+      
+      console.log('真实消息签名成功:', signature)
       
       return signature
       
@@ -350,7 +406,9 @@ export const createPrivyContext = () => {
     signMessage: signMessageWithPrivy,
     showPrivyIframe,
     hidePrivyIframe,
-    setIframeRef
+    setIframeRef,
+    syncAuthState,
+    manualSync
   }
   
   return context

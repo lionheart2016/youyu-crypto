@@ -5,7 +5,16 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3001,
-    cors: true
+    cors: {
+      origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+    },
+    headers: {
+      'Cross-Origin-Embedder-Policy': 'cross-origin',
+      'Cross-Origin-Opener-Policy': 'same-origin-allow-popups'
+    }
   },
   build: {
     outDir: 'dist',

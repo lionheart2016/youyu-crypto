@@ -19,7 +19,30 @@
       </div>
     </div>
     
-    <div class="relative">
+    <!-- 加载状态 -->
+    <div v-if="isLoading" class="h-64 flex items-center justify-center">
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+        <p class="text-gray-400">加载价格数据中...</p>
+      </div>
+    </div>
+    
+    <!-- 错误状态 -->
+    <div v-else-if="error" class="h-64 flex items-center justify-center">
+      <div class="text-center">
+        <div class="text-red-400 text-2xl mb-2">⚠️</div>
+        <p class="text-gray-400">{{ error }}</p>
+        <button 
+          @click="fetchChartData" 
+          class="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+        >
+          重试
+        </button>
+      </div>
+    </div>
+    
+    <!-- 正常状态 -->
+    <div v-else class="relative">
       <canvas ref="chartCanvas" class="w-full" style="height: 300px;"></canvas>
     </div>
     
@@ -68,17 +91,25 @@ export default {
         low: 0,
         current: 0
       },
-      chart: null
+      chart: null,
+      isLoading: true,
+      error: null
+    }
+  },
+  props: {
+    symbol: {
+      type: String,
+      default: 'ETH'
     }
   },
   mounted() {
-    this.generateChartData()
+    this.fetchChartData()
     this.initChart()
     
-    // 模拟实时数据更新
+    // 每30秒更新一次数据
     this.updateInterval = setInterval(() => {
-      this.updateChartData()
-    }, 5000)
+      this.fetchChartData()
+    }, 30000)
   },
   beforeUnmount() {
     if (this.updateInterval) {
@@ -89,6 +120,75 @@ export default {
     }
   },
   methods: {
+    async fetchChartData() {
+      try {
+        this.isLoading = true
+        this.error = null
+        
+        // 根据选择的周期确定天数
+        const daysMap = {
+          '24h': 1,
+          '7d': 7,
+          '1m': 30,
+          '1y': 365
+        }
+        const days = daysMap[this.selectedPeriod] || 7
+        
+        // 调用后端API获取价格历史数据
+        const response = await fetch(`/api/trading/price-history/${this.symbol}?days=${days}`)
+        if (!response.ok) {
+          throw new Error('获取价格历史数据失败')
+        }
+        
+        const priceHistory = await response.json()
+        
+        // 处理数据格式
+        const labels = []
+        const prices = []
+        
+        priceHistory.forEach(item => {
+          const date = new Date(item.timestamp)
+          let label
+          
+          if (days <= 1) {
+            // 24小时数据，显示小时
+            label = date.getHours().toString().padStart(2, '0') + ':00'
+          } else if (days <= 7) {
+            // 7天数据，显示日期和时间
+            label = `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:00`
+          } else {
+            // 更长时间，只显示日期
+            label = `${date.getMonth() + 1}/${date.getDate()}`
+          }
+          
+          labels.push(label)
+          prices.push(item.price)
+        })
+        
+        this.chartData.labels = labels
+        this.chartData.prices = prices
+        this.chartData.open = prices[0] || 0
+        this.chartData.high = Math.max(...prices) || 0
+        this.chartData.low = Math.min(...prices) || 0
+        this.chartData.current = prices[prices.length - 1] || 0
+        
+        // 更新图表
+        if (this.chart) {
+          this.chart.data.labels = labels
+          this.chart.data.datasets[0].data = prices
+          this.chart.update('none')
+        } else {
+          this.initChart()
+        }
+        
+      } catch (error) {
+        this.error = error.message
+        console.error('获取价格图表数据错误:', error)
+      } finally {
+        this.isLoading = false
+      }
+    },
+    
     initChart() {
       if (this.chart) {
         this.chart.destroy()
@@ -102,7 +202,7 @@ export default {
         data: {
           labels: this.chartData.labels,
           datasets: [{
-            label: 'ETH/USDT',
+            label: `${this.symbol}/USDT`,
             data: this.chartData.prices,
             borderColor: '#667eea',
             backgroundColor: 'rgba(102, 126, 234, 0.1)',
@@ -130,7 +230,12 @@ export default {
               bodyColor: '#fff',
               borderColor: '#667eea',
               borderWidth: 1,
-              cornerRadius: 8
+              cornerRadius: 8,
+              callbacks: {
+                label: function(context) {
+                  return `价格: $${context.parsed.y.toLocaleString()}`
+                }
+              }
             }
           },
           scales: {
@@ -165,64 +270,6 @@ export default {
       })
     },
     
-    generateChartData() {
-      const basePrice = 3200
-      const dataPoints = 24
-      const labels = []
-      const prices = []
-      
-      for (let i = 0; i < dataPoints; i++) {
-        const hour = new Date(Date.now() - (dataPoints - i - 1) * 3600000)
-        labels.push(hour.getHours().toString().padStart(2, '0') + ':00')
-        
-        // 模拟价格波动
-        const volatility = Math.random() * 100 - 50
-        const trend = i * 2 // 轻微上涨趋势
-        const price = basePrice + volatility + trend
-        prices.push(price)
-      }
-      
-      this.chartData.labels = labels
-      this.chartData.prices = prices
-      this.chartData.open = prices[0]
-      this.chartData.high = Math.max(...prices)
-      this.chartData.low = Math.min(...prices)
-      this.chartData.current = prices[prices.length - 1]
-    },
-    
-    updateChartData() {
-      if (!this.chartData.prices.length) return
-      
-      // 移除第一个数据点，添加新的数据点
-      this.chartData.labels.shift()
-      this.chartData.prices.shift()
-      
-      // 生成新的数据点
-      const lastPrice = this.chartData.prices[this.chartData.prices.length - 1] || 3200
-      const volatility = Math.random() * 20 - 10
-      const newPrice = Math.max(3100, Math.min(3400, lastPrice + volatility))
-      
-      this.chartData.prices.push(newPrice)
-      
-      // 生成新的时间标签
-      const now = new Date()
-      this.chartData.labels.push(now.getHours().toString().padStart(2, '0') + ':' + 
-                              now.getMinutes().toString().padStart(2, '0'))
-      
-      // 更新统计数据
-      this.chartData.open = this.chartData.prices[0]
-      this.chartData.high = Math.max(...this.chartData.prices)
-      this.chartData.low = Math.min(...this.chartData.prices)
-      this.chartData.current = newPrice
-      
-      // 更新图表
-      if (this.chart) {
-        this.chart.data.labels = this.chartData.labels
-        this.chart.data.datasets[0].data = this.chartData.prices
-        this.chart.update('none')
-      }
-    },
-    
     formatPrice(price) {
       return price.toLocaleString('en-US', {
         minimumFractionDigits: 2,
@@ -232,9 +279,8 @@ export default {
   },
   watch: {
     selectedPeriod(newPeriod) {
-      // 根据选择的时间周期重新生成数据
-      this.generateChartData()
-      this.initChart()
+      // 根据选择的时间周期重新获取数据
+      this.fetchChartData()
     }
   }
 }

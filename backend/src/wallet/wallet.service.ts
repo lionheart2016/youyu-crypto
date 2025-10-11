@@ -89,21 +89,26 @@ export class WalletService {
     const wallet = await this.walletRepository.findOne({ where: { id: walletId } });
     const assets = await this.assetRepository.find({ where: { walletId } });
     
-    // 这里应该从市场价格API获取实时价格
-    // 目前使用模拟价格
-    const mockPrices = {
-      'ETH': 3250.42,
-      'BTC': 43250.67,
-      'BNB': 315.78,
-      'SOL': 102.45,
-    };
+    // 从CoinGecko API获取实时价格
+    try {
+      const symbols = assets.map(asset => asset.symbol.toLowerCase()).join(',');
+      const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${symbols}&vs_currencies=usd`);
+      const priceData = await response.json();
+      
+      const assetsValue = assets.reduce((sum, asset) => {
+        const price = priceData[asset.symbol.toLowerCase()]?.usd || 0;
+        return sum + asset.amount * price;
+      }, 0);
 
-    const assetsValue = assets.reduce((sum, asset) => {
-      const price = mockPrices[asset.symbol] || 0;
-      return sum + asset.amount * price;
-    }, 0);
-
-    return wallet.balance + assetsValue;
+      return wallet.balance + assetsValue;
+    } catch (error) {
+      console.error('获取实时价格失败:', error);
+      // 如果API调用失败，使用默认值
+      const assetsValue = assets.reduce((sum, asset) => {
+        return sum + asset.amount * 0;
+      }, 0);
+      return wallet.balance + assetsValue;
+    }
   }
 
   async getWalletOverview(userId: string): Promise<any> {
@@ -124,10 +129,26 @@ export class WalletService {
     };
   }
 
-  // 模拟从区块链获取余额
+  // 从区块链获取真实余额
   async syncWalletBalance(address: string): Promise<number> {
-    // 这里应该调用以太坊节点API获取真实余额
-    // 目前返回模拟余额
-    return Math.random() * 10; // 0-10 ETH的随机余额
+    try {
+      // 使用Etherscan API获取真实余额
+      const apiKey = process.env.ETHERSCAN_API_KEY || 'YourApiKeyToken';
+      const response = await fetch(`https://api.etherscan.io/api?module=account&action=balance&address=${address}&tag=latest&apikey=${apiKey}`);
+      const data = await response.json();
+      
+      if (data.status === '1' && data.result) {
+        // 将wei转换为ETH
+        const balanceInWei = data.result;
+        const balanceInEth = parseFloat(balanceInWei) / 1e18;
+        return balanceInEth;
+      } else {
+        throw new Error('获取余额失败: ' + data.message);
+      }
+    } catch (error) {
+      console.error('获取区块链余额失败:', error);
+      // 如果API调用失败，返回0
+      return 0;
+    }
   }
 }

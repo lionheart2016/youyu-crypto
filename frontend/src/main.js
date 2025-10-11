@@ -8,7 +8,7 @@ const app = createApp(App)
 
 // 配置Google登录
 app.use(vue3GoogleLogin, {
-  clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID || 'demo-client-id'
+  clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID
 })
 
 app.use(router)

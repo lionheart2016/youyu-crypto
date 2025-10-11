@@ -7,32 +7,25 @@
     
     <!-- Privy iframe认证组件 -->
     <PrivyIframe 
-      v-if="privyContext.showIframe"
       @iframe-ready="onIframeReady"
     />
+    
+    <!-- 认证状态监听器（调试用） -->
+    <AuthStateMonitor />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted } from 'vue'
 import NavBar from './components/NavBar.vue'
 import PrivyIframe from './components/PrivyIframe.vue'
+import AuthStateMonitor from './components/AuthStateMonitor.vue'
 import { createPrivyContext, providePrivy } from './contexts/PrivyContext'
 
 const privyContext = createPrivyContext()
 providePrivy(privyContext)
 
 const ready = ref(false)
-
-// 监听认证状态变化，认证成功后自动隐藏iframe
-watch(() => privyContext.isAuthenticated, (authenticated) => {
-  if (authenticated) {
-    // 认证成功后延迟隐藏iframe
-    setTimeout(() => {
-      privyContext.hidePrivyIframe()
-    }, 1000)
-  }
-})
 
 const onIframeReady = (iframeRef) => {
   console.log('Privy iframe已就绪')

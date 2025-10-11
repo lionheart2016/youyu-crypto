@@ -15,9 +15,7 @@ const loadState = () => {
     isConnected: false,
     account: null,
     balance: '0.00',
-    provider: null,
-    signer: null,
-    walletType: null, // 'metamask' 或 'privy'
+    walletType: null, // 现在只支持 'privy'
     tokenBalances: {}
   }
 }
@@ -25,7 +23,7 @@ const loadState = () => {
 // 保存状态到本地存储
 const saveState = (state) => {
   try {
-    // 只保存必要的状态，避免保存provider和signer等不可序列化的对象
+    // 只保存必要的状态
     const stateToSave = {
       isConnected: state.isConnected,
       account: state.account,
@@ -72,8 +70,6 @@ const walletStore = {
       isConnected: false,
       account: null,
       balance: '0.00',
-      provider: null,
-      signer: null,
       walletType: null,
       tokenBalances: {}
     }

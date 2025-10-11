@@ -58,41 +58,46 @@ export class WalletController {
   }
 
   @Post(':userId/deposit')
-  @ApiOperation({ summary: '模拟存款' })
-  @ApiResponse({ status: 201, description: '存款成功' })
+  @ApiOperation({ summary: '处理存款交易' })
+  @ApiResponse({ status: 201, description: '存款交易处理成功' })
   async deposit(
     @Param('userId') userId: string,
     @Body('amount') amount: number,
     @Body('symbol') symbol: string = 'ETH',
+    @Body('transactionHash') transactionHash: string,
   ): Promise<any> {
     const wallet = await this.walletService.getWallet(userId);
     if (!wallet) {
       throw new Error('钱包不存在');
     }
 
-    // 更新余额
-    await this.walletService.updateBalance(wallet.id, amount);
-    
-    // 记录交易
+    // 验证交易哈希
+    if (!transactionHash || !transactionHash.startsWith('0x')) {
+      throw new Error('无效的交易哈希');
+    }
+
+    // 记录存款交易
     await this.walletService.createTransaction({
       walletId: wallet.id,
       type: 'deposit',
       symbol,
       amount,
-      status: 'completed',
-      completedAt: new Date(),
+      status: 'pending', // 等待区块链确认
+      transactionHash,
+      createdAt: new Date(),
     });
 
-    return { message: '存款成功', amount };
+    return { message: '存款交易已提交，等待区块链确认', amount, transactionHash };
   }
 
   @Post(':userId/withdraw')
-  @ApiOperation({ summary: '模拟提现' })
-  @ApiResponse({ status: 201, description: '提现成功' })
+  @ApiOperation({ summary: '处理提现交易' })
+  @ApiResponse({ status: 201, description: '提现交易处理成功' })
   async withdraw(
     @Param('userId') userId: string,
     @Body('amount') amount: number,
     @Body('symbol') symbol: string = 'ETH',
+    @Body('toAddress') toAddress: string,
   ): Promise<any> {
     const wallet = await this.walletService.getWallet(userId);
     if (!wallet) {
@@ -103,20 +108,23 @@ export class WalletController {
       throw new Error('余额不足');
     }
 
-    // 更新余额
-    await this.walletService.updateBalance(wallet.id, -amount);
-    
-    // 记录交易
+    // 验证提现地址
+    if (!toAddress || !toAddress.startsWith('0x')) {
+      throw new Error('无效的提现地址');
+    }
+
+    // 记录提现交易
     await this.walletService.createTransaction({
       walletId: wallet.id,
       type: 'withdrawal',
       symbol,
       amount: -amount,
-      status: 'completed',
-      completedAt: new Date(),
+      status: 'pending', // 等待区块链确认
+      toAddress,
+      createdAt: new Date(),
     });
 
-    return { message: '提现成功', amount };
+    return { message: '提现交易已提交，等待区块链确认', amount, toAddress };
   }
 
   @Get('balance/:address')

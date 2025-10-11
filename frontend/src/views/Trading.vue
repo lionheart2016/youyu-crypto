@@ -155,7 +155,7 @@
           <div class="space-y-4">
             <div>
               <label class="block text-sm text-gray-300 mb-1">订单类型</label>
-              <select v-model="orderType" class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white">
+              <select v-model="orderType" class="app-select">
                 <option value="limit">限价单</option>
                 <option value="market">市价单</option>
               </select>
@@ -167,7 +167,7 @@
                 v-model="limitPrice" 
                 type="number" 
                 placeholder="0.00"
-                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                class="app-input"
               >
             </div>
             
@@ -177,7 +177,7 @@
                 v-model="orderAmount" 
                 type="number" 
                 placeholder="0.00"
-                class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white"
+                class="app-input"
               >
             </div>
             
@@ -201,11 +201,11 @@
           <div class="mt-6 p-4 bg-gray-800 rounded-lg">
             <div class="flex justify-between items-center">
               <span class="text-gray-300">当前价格</span>
-              <span class="text-2xl font-bold">$3,250.42</span>
+              <span class="text-2xl font-bold">${{ formatPrice(currentPrice) }}</span>
             </div>
             <div class="flex justify-between text-sm text-gray-400 mt-2">
-              <span>24h 最高: $3,280.15</span>
-              <span>24h 最低: $3,210.76</span>
+              <span>24h 最高: ${{ formatPrice(priceHigh) }}</span>
+              <span>24h 最低: ${{ formatPrice(priceLow) }}</span>
             </div>
           </div>
         </div>
@@ -265,20 +265,15 @@ export default {
       orderType: 'limit',
       limitPrice: '',
       orderAmount: '',
-      sellOrders: [
-        { id: 1, price: 3252.45, amount: 1.24 },
-        { id: 2, price: 3251.89, amount: 0.87 },
-        { id: 3, price: 3250.76, amount: 2.15 }
-      ],
-      buyOrders: [
-        { id: 1, price: 3248.32, amount: 0.95 },
-        { id: 2, price: 3247.18, amount: 1.42 },
-        { id: 3, price: 3246.54, amount: 0.78 }
-      ],
+      sellOrders: [],
+      buyOrders: [],
       walletConnected: false,
       currentAccount: null,
       unsubscribe: null,
-      userOrders: []
+      userOrders: [],
+      currentPrice: 0,
+      priceHigh: 0,
+      priceLow: 0
     }
   },
   created() {
@@ -317,11 +312,19 @@ export default {
         
         // 直接使用后端返回的数据格式
         this.marketList = marketData
+        
+        // 更新当前价格信息
+        const selectedMarket = marketData.find(m => m.pair === this.selectedPair)
+        if (selectedMarket) {
+          this.currentPrice = selectedMarket.price
+          this.priceHigh = selectedMarket.high
+          this.priceLow = selectedMarket.low
+        }
       } catch (error) {
         this.error = error.message
         console.error('获取市场数据错误:', error)
-        // 如果API调用失败，使用模拟数据
-        this.marketList = this.getMockMarketData()
+        // 如果API调用失败，显示错误信息
+        this.marketList = []
       } finally {
         this.isLoading = false
       }
@@ -340,10 +343,13 @@ export default {
           throw new Error('获取订单簿失败')
         }
         const orderBook = await response.json()
-        this.sellOrders = orderBook.sells || []
-        this.buyOrders = orderBook.buys || []
+        this.sellOrders = orderBook.sellOrders || []
+        this.buyOrders = orderBook.buyOrders || []
       } catch (error) {
         console.error('获取订单簿错误:', error)
+        // 如果API调用失败，清空订单簿数据
+        this.sellOrders = []
+        this.buyOrders = []
       }
     },
     
@@ -371,50 +377,15 @@ export default {
       return coinNames[symbol.toLowerCase()] || symbol
     },
     
-    getMockMarketData() {
-      return [
-        {
-          pair: 'ETH/USDT',
-          symbol: 'E',
-          name: '以太坊',
-          price: 3250.42,
-          change: 2.34,
-          volume: 1250000000,
-          high: 3280.15,
-          low: 3210.76
-        },
-        {
-          pair: 'BTC/USDT',
-          symbol: 'B',
-          name: '比特币',
-          price: 43250.67,
-          change: 1.89,
-          volume: 2850000000,
-          high: 43820.45,
-          low: 42980.12
-        },
-        {
-          pair: 'BNB/USDT',
-          symbol: 'B',
-          name: '币安币',
-          price: 325.78,
-          change: -0.56,
-          volume: 450000000,
-          high: 332.45,
-          low: 320.12
-        },
-        {
-          pair: 'SOL/USDT',
-          symbol: 'S',
-          name: 'Solana',
-          price: 125.34,
-          change: 5.23,
-          volume: 780000000,
-          high: 128.67,
-          low: 119.45
-        }
-      ]
+    formatPrice(price) {
+      if (!price) return '0.00'
+      return price.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })
     },
+    
+
     
     async placeOrder(side) {
       // 检查钱包连接状态
