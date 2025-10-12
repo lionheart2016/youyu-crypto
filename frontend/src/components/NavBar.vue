@@ -35,6 +35,13 @@
             >
               同步测试
             </router-link>
+            <router-link 
+              to="/create-wallet" 
+              class="text-gray-300 hover:text-white transition-colors"
+              active-class="text-white font-semibold"
+            >
+              创建钱包
+            </router-link>
           </div>
         </div>
         
@@ -42,7 +49,7 @@
           <!-- 用户信息和登出菜单 -->
           <div class="user-menu-container relative" ref="userMenuRef">
             <!-- 已连接状态显示 -->
-            <div v-if="isConnected || privy.isAuthenticated" class="flex items-center space-x-3">
+            <div v-if="showUserMenuState" class="flex items-center space-x-3">
               <!-- 用户头像 -->
               <div 
                 @click="toggleUserMenu" 
@@ -128,10 +135,22 @@ export default {
     const showUserMenu = ref(false)
     const userMenuRef = ref(null)
     
+    // 添加调试日志
+    const debugState = computed(() => {
+      console.log('=== NavBar调试信息 ===')
+      console.log('Privy认证状态:', privy.isAuthenticated.value)
+      console.log('Privy用户信息:', privy.user.value)
+      console.log('Privy钱包地址:', privy.walletAddress.value)
+      console.log('钱包存储状态:', walletStore.getState())
+      console.log('showUserMenuState计算结果:', showUserMenuState.value)
+      return true
+    })
+    
     // 计算属性 - 连接状态
     const isConnected = computed(() => {
       const state = walletStore.getState()
-      return state.isConnected || privy.isAuthenticated.value
+      // 只有在Privy认证通过时才显示为已连接
+      return privy.isAuthenticated.value || (state.isConnected && state.account)
     })
     
     // 计算属性 - 用户信息
@@ -157,6 +176,18 @@ export default {
       return `${address.slice(0, 6)}...${address.slice(-4)}`
     })
     
+    // 计算属性 - 是否显示用户菜单
+    const showUserMenuState = computed(() => {
+      const result = privy.isAuthenticated.value || (walletStore.getState().isConnected && walletStore.getState().account)
+      console.log('计算showUserMenuState:', {
+        isAuthenticated: privy.isAuthenticated.value,
+        walletConnected: walletStore.getState().isConnected,
+        hasAccount: !!walletStore.getState().account,
+        result
+      })
+      return result
+    })
+    
     // 计算属性 - 钱包余额
     const walletBalance = computed(() => {
       return privy.walletBalance.value || walletStore.getState().balance || '0.00'
@@ -175,11 +206,23 @@ export default {
     
     // 计算属性 - 连接状态指示器
     const connectionText = computed(() => {
-      return privy.isAuthenticated.value ? '已认证' : '已连接'
+      console.log('计算connectionText:', {
+        isAuthenticated: privy.isAuthenticated.value,
+        walletConnected: walletStore.getState().isConnected
+      })
+      if (privy.isAuthenticated.value) return '已认证'
+      if (walletStore.getState().isConnected) return '已连接'
+      return '未连接'
     })
     
     const connectionClass = computed(() => {
-      return privy.isAuthenticated.value ? 'bg-green-500' : 'bg-blue-500'
+      console.log('计算connectionClass:', {
+        isAuthenticated: privy.isAuthenticated.value,
+        walletConnected: walletStore.getState().isConnected
+      })
+      if (privy.isAuthenticated.value) return 'bg-green-500'
+      if (walletStore.getState().isConnected) return 'bg-blue-500'
+      return 'bg-gray-500'
     })
     
     // 方法 - 切换用户菜单
@@ -235,6 +278,8 @@ export default {
       walletTypeClass,
       connectionText,
       connectionClass,
+      showUserMenuState,
+      debugState,
       
       // 方法
       toggleUserMenu,

@@ -58,6 +58,23 @@
             查看交易
           </button>
         </div>
+        
+        <!-- 创建钱包按钮 - 只有在没有钱包地址时显示 -->
+        <div v-if="!walletAddress && authenticated" class="mt-3">
+          <button 
+            @click="createWallet" 
+            :disabled="isCreatingWallet"
+            class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white px-4 py-2 rounded text-sm transition-colors flex items-center justify-center"
+          >
+            <svg v-if="!isCreatingWallet" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            <svg v-else class="animate-spin w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            {{ isCreatingWallet ? '创建中...' : '创建钱包' }}
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -74,6 +91,8 @@ const {
   connectWallet: privyConnect,
   disconnectWallet: privyDisconnect
 } = usePrivy();
+
+const isCreatingWallet = ref(false);
 
 const isConnecting = ref(false);
 
@@ -103,6 +122,30 @@ const disconnectWallet = async () => {
   } catch (error) {
     console.error('断开连接失败:', error);
     alert('断开连接失败，请重试');
+  }
+};
+
+// 创建钱包
+const createWallet = async () => {
+  isCreatingWallet.value = true;
+  try {
+    // 通过iframe通知React应用创建钱包
+    const iframe = document.querySelector('iframe[src*="3001"]');
+    if (iframe && iframe.contentWindow) {
+      iframe.contentWindow.postMessage({
+        type: 'CREATE_WALLET_REQUEST'
+      }, 'http://localhost:3001');
+      
+      console.log('已请求创建钱包');
+      alert('钱包创建请求已发送，请在React应用中确认');
+    } else {
+      throw new Error('无法找到React应用iframe');
+    }
+  } catch (error) {
+    console.error('创建钱包失败:', error);
+    alert('创建钱包失败，请重试');
+  } finally {
+    isCreatingWallet.value = false;
   }
 };
 

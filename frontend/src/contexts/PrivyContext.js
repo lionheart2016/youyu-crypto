@@ -1,4 +1,4 @@
-import { ref, provide, inject, onMounted, onUnmounted } from 'vue'
+import { ref, provide, inject, onMounted, onUnmounted, computed } from 'vue'
 import { privyConfig } from '../config/privy.js'
 
 // 创建Privy上下文键
@@ -60,6 +60,58 @@ export const createPrivyContext = () => {
     } else if (event.data.type === 'PRIVY_ERROR') {
       error.value = event.data.error
       console.error('Privy错误:', event.data.error)
+    } else if (event.data.type === 'WALLET_CREATED') {
+      // 处理钱包创建成功
+      console.log('🎉 收到钱包创建成功消息:', event.data.wallet)
+      
+      if (event.data.wallet && event.data.wallet.address) {
+        // 更新钱包地址和余额
+        walletAddress.value = event.data.wallet.address
+        walletBalance.value = '0.00' // 可以在这里添加获取真实余额的逻辑
+        
+        console.log('✅ 钱包创建成功，地址:', event.data.wallet.address)
+        console.log('✅ 链类型:', event.data.wallet.chain)
+        
+        // 显示成功通知（可选）
+        if (typeof window !== 'undefined' && window.dispatchEvent) {
+          window.dispatchEvent(new CustomEvent('wallet-created', {
+            detail: {
+              address: event.data.wallet.address,
+              chain: event.data.wallet.chain
+            }
+          }))
+        }
+      } else {
+        console.warn('⚠️ 钱包创建消息格式不正确:', event.data)
+      }
+    } else if (event.data.type === 'EXTERNAL_WALLET_CONNECTED') {
+      // 处理外部钱包连接成功
+      console.log('🎉 收到外部钱包连接成功消息:', event.data.wallet)
+      
+      if (event.data.wallet && event.data.wallet.address) {
+        // 更新钱包地址
+        walletAddress.value = event.data.wallet.address
+        console.log('✅ 外部钱包连接成功，地址:', event.data.wallet.address)
+        console.log('✅ 钱包类型:', event.data.wallet.type)
+        console.log('✅ 链类型:', event.data.wallet.chain)
+        
+        // 隐藏iframe
+        hidePrivyIframe()
+        console.log('外部钱包连接成功，已隐藏iframe')
+        
+        // 显示成功通知（可选）
+        if (typeof window !== 'undefined' && window.dispatchEvent) {
+          window.dispatchEvent(new CustomEvent('external-wallet-connected', {
+            detail: {
+              address: event.data.wallet.address,
+              type: event.data.wallet.type,
+              chain: event.data.wallet.chain
+            }
+          }))
+        }
+      } else {
+        console.warn('⚠️ 外部钱包连接消息格式不正确:', event.data)
+      }
     }
   }
   
@@ -67,6 +119,12 @@ export const createPrivyContext = () => {
   const initPrivy = () => {
     try {
       console.log('Privy初始化开始')
+      
+      // 初始化时重置状态为未认证
+      isAuthenticated.value = false
+      user.value = null
+      walletAddress.value = ''
+      walletBalance.value = '0'
       
       // 添加消息监听器
       window.addEventListener('message', messageHandler)
@@ -77,7 +135,7 @@ export const createPrivyContext = () => {
       // 延迟同步状态，确保iframe已加载
       setTimeout(() => {
         syncAuthState()
-      }, 1000)
+      }, 2000) // 增加延迟时间到2秒
       
       console.log('Privy初始化完成 - 通过iframe嵌入React应用')
       
@@ -106,6 +164,12 @@ export const createPrivyContext = () => {
       console.log('状态同步请求已发送')
     } else {
       console.warn('iframe未准备好，无法发送同步请求')
+      // iframe未准备好时，重置状态为未认证
+      isAuthenticated.value = false
+      user.value = null
+      walletAddress.value = ''
+      walletBalance.value = '0'
+      console.log('iframe未准备好，重置为未认证状态')
     }
   }
   
@@ -203,13 +267,10 @@ export const createPrivyContext = () => {
         }, 'http://localhost:3001')
       }
       
-      // 清除本地状态
-      isAuthenticated.value = false
-      user.value = null
-      walletAddress.value = ''
-      walletBalance.value = '0'
+      console.log('已请求Privy登出，等待React应用响应...')
       
-      console.log('已请求Privy登出')
+      // 不要立即清除本地状态，等待React应用的PRIVY_AUTH_STATE消息
+      // React应用会在登出完成后发送认证状态更新
       
     } catch (err) {
       console.error('登出请求失败:', err)
@@ -378,6 +439,22 @@ export const createPrivyContext = () => {
     }
   }
   
+  // 状态摘要计算属性
+  const stateSummary = computed(() => {
+    return {
+      ready: ready.value,
+      isAuthenticated: isAuthenticated.value,
+      user: user.value,
+      walletAddress: walletAddress.value,
+      walletBalance: walletBalance.value,
+      showIframe: showIframe.value,
+      loading: loading.value,
+      error: error.value,
+      googleLoginEnabled: googleLoginEnabled.value,
+      timestamp: new Date().toISOString()
+    }
+  })
+
   const context = {
     // 状态
     ready,
@@ -390,6 +467,7 @@ export const createPrivyContext = () => {
     walletBalance,
     googleLoginEnabled,
     showIframe,
+    stateSummary,
     
     // 方法
     initPrivy,

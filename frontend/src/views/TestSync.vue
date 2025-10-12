@@ -63,6 +63,22 @@
         <button @click="testCommunication" class="btn btn-info">
           测试消息通信
         </button>
+        <button @click="logout" class="btn btn-danger" :disabled="loading">
+          {{ loading ? '登出中...' : '登出' }}
+        </button>
+      </div>
+    </div>
+    
+    <!-- 测试创建钱包区域 -->
+    <div class="action-panel">
+      <h3>💳 测试创建钱包</h3>
+      <div class="button-grid">
+        <button @click="testCreateWallet" class="btn btn-primary" :disabled="!isAuthenticated || isCreatingWallet">
+          {{ isCreatingWallet ? '⏳ 创建中...' : '💎 测试创建钱包' }}
+        </button>
+        <button @click="checkWalletStatus" class="btn btn-info">
+          🔍 检查钱包状态
+        </button>
       </div>
     </div>
     
@@ -112,6 +128,7 @@ const {
   } = usePrivy()
 
 const messageLogs = ref([])
+const isCreatingWallet = ref(false)
 
 // 添加日志
 const addLog = (message, type = 'info') => {
@@ -182,6 +199,88 @@ const testCommunication = () => {
   addLog('开始测试消息通信...', 'info')
   testMessageCommunication()
   addLog('消息通信测试已启动，请查看控制台输出', 'success')
+}
+
+// 测试创建钱包
+const testCreateWallet = async () => {
+  try {
+    isCreatingWallet.value = true
+    addLog('开始测试创建钱包...', 'info')
+    
+    // 1. 检查认证状态
+    if (!isAuthenticated.value) {
+      throw new Error('用户未认证，请先连接钱包')
+    }
+    
+    // 2. 检查React应用
+    const iframe = document.querySelector('iframe[src*="3001"]') || document.querySelector('iframe[src*="3002"]')
+    if (!iframe) {
+      throw new Error('React应用未找到')
+    }
+    
+    addLog('React应用已找到，准备发送创建钱包请求...', 'info')
+    
+    // 3. 发送创建钱包请求
+    const targetOrigin = iframe.src.includes('3001') ? 'http://localhost:3001' : 'http://localhost:3002'
+    
+    // 添加调试信息
+    addLog(`发送创建钱包请求到: ${targetOrigin}`, 'info')
+    addLog(`当前认证状态: ${isAuthenticated.value}`, 'info')
+    addLog(`用户信息: ${user.value ? JSON.stringify(user.value) : '无'}`, 'info')
+    addLog(`iframe src: ${iframe.src}`, 'info') // 添加iframe源信息
+    addLog(`iframe contentWindow存在: ${!!iframe.contentWindow}`, 'info') // 检查contentWindow是否存在
+    
+    // 检查iframe是否已加载完成
+    if (!iframe.contentWindow) {
+      throw new Error('iframe contentWindow未准备好')
+    }
+    
+    iframe.contentWindow.postMessage({
+      type: 'CREATE_WALLET_REQUEST',
+      timestamp: Date.now()
+    }, targetOrigin)
+    
+    addLog('创建钱包请求已发送，等待响应...', 'info')
+    
+    // 4. 等待响应
+    const response = await Promise.race([
+      new Promise((resolve, reject) => {
+        const messageHandler = (event) => {
+          addLog(`收到消息类型: ${event.data.type}`, 'info') // 添加调试日志
+          if (event.data.type === 'WALLET_CREATED') {
+            window.removeEventListener('message', messageHandler)
+            resolve(event.data)
+          } else if (event.data.type === 'PRIVY_ERROR') {
+            window.removeEventListener('message', messageHandler)
+            reject(new Error(event.data.error))
+          }
+        }
+        window.addEventListener('message', messageHandler)
+      }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('等待响应超时')), 30000))
+    ])
+    
+    addLog('钱包创建成功！', 'success')
+    addLog(`钱包地址: ${response.wallet?.address || '未知'}`, 'success')
+    
+  } catch (error) {
+    addLog(`创建钱包失败: ${error.message}`, 'error')
+    console.error('创建钱包失败:', error) // 添加控制台错误日志
+  } finally {
+    isCreatingWallet.value = false
+  }
+}
+
+// 检查钱包状态
+const checkWalletStatus = () => {
+  addLog('检查钱包状态...', 'info')
+  
+  const hasWallet = !!walletAddress.value
+  if (hasWallet) {
+    addLog(`钱包已连接: ${walletAddress.value}`, 'success')
+  } else {
+    addLog('钱包未连接', 'warning')
+  }
 }
 
 
@@ -437,6 +536,11 @@ h1 {
   color: white;
   padding: 8px 16px;
   font-size: 12px;
+}
+
+.btn-success {
+  background: #28a745;
+  color: white;
 }
 
 .log-container {

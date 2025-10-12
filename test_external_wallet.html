@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>外部钱包连接测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .iframe-container {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .controls {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 6px;
+        }
+        .log {
+            margin-top: 20px;
+            padding: 15px;
+            background: #1f2937;
+            color: #f9fafb;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        button {
+            padding: 8px 16px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .primary { background: #3b82f6; color: white; }
+        .secondary { background: #6b7280; color: white; }
+        .success { background: #10b981; color: white; }
+        .warning { background: #f59e0b; color: white; }
+        .error { background: #ef4444; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 外部钱包连接功能测试</h1>
+        <p>这个页面用于测试react-privy-app的外部钱包连接功能</p>
+        
+        <div class="iframe-container">
+            <iframe id="privyIframe" src="http://localhost:3001"></iframe>
+        </div>
+        
+        <div class="controls">
+            <h3>📋 测试操作</h3>
+            <button class="primary" onclick="sendMessage('SYNC_AUTH_STATE')">🔄 同步认证状态</button>
+            <button class="secondary" onclick="sendMessage('OPEN_LOGIN_MODAL', 'wallet')">🔗 连接钱包</button>
+            <button class="success" onclick="sendMessage('OPEN_LOGIN_MODAL', 'google')">🔐 Google登录</button>
+            <button class="warning" onclick="sendMessage('OPEN_LOGIN_MODAL', 'email')">📧 邮箱登录</button>
+            <button class="error" onclick="sendMessage('LOGOUT_REQUEST')">🚪 登出</button>
+            
+            <div style="margin-top: 10px;">
+                <h4>🌐 外部钱包测试</h4>
+                <button class="primary" onclick="sendMessage('CONNECT_EXTERNAL_WALLET', 'metamask')">🦊 MetaMask</button>
+                <button class="primary" onclick="sendMessage('CONNECT_EXTERNAL_WALLET', 'coinbase-wallet')">💰 Coinbase</button>
+                <button class="primary" onclick="sendMessage('CONNECT_EXTERNAL_WALLET', 'wallet-connect')">🔗 WalletConnect</button>
+                <button class="primary" onclick="sendMessage('CONNECT_EXTERNAL_WALLET', 'rainbow')">🌈 Rainbow</button>
+                <button class="primary" onclick="sendMessage('CONNECT_EXTERNAL_WALLET', 'phantom')">👻 Phantom</button>
+            </div>
+        </div>
+        
+        <div class="log" id="log">
+            <div>📝 日志输出:</div>
+            <div id="logContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const iframe = document.getElementById('privyIframe');
+        const logContent = document.getElementById('logContent');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `<span style="color: #${type === 'error' ? 'ef4444' : type === 'success' ? '10b981' : '6b7280'}">[${timestamp}]</span> ${message}`;
+            logContent.appendChild(logEntry);
+            logContent.scrollTop = logContent.scrollHeight;
+        }
+        
+        function sendMessage(type, data = null) {
+            const message = { type };
+            if (data) {
+                if (type === 'OPEN_LOGIN_MODAL') {
+                    message.method = data;
+                } else if (type === 'CONNECT_EXTERNAL_WALLET') {
+                    message.walletType = data;
+                }
+            }
+            
+            log(`📤 发送消息: ${JSON.stringify(message)}`);
+            iframe.contentWindow.postMessage(message, '*');
+        }
+        
+        // 监听来自iframe的消息
+        window.addEventListener('message', (event) => {
+            if (event.source !== iframe.contentWindow) return;
+            
+            log(`📥 收到消息: ${JSON.stringify(event.data)}`, 'success');
+            
+            switch (event.data.type) {
+                case 'PRIVY_AUTH_STATE':
+                    log(`🔐 认证状态: ${event.data.authenticated ? '✅ 已认证' : '❌ 未认证'}`);
+                    if (event.data.authenticated && event.data.user) {
+                        log(`👤 用户信息: ID=${event.data.user.id}, 邮箱=${event.data.user.email?.address || '未设置'}`);
+                    }
+                    break;
+                    
+                case 'WALLET_CREATED':
+                    log(`💳 钱包创建成功: ${event.data.wallet.address}`);
+                    break;
+                    
+                case 'EXTERNAL_WALLET_CONNECTED':
+                    log(`🌐 外部钱包连接成功: ${event.data.wallet.address} (${event.data.wallet.walletClientType})`);
+                    break;
+                    
+                case 'PRIVY_ERROR':
+                    log(`❌ 错误: ${event.data.error}`, 'error');
+                    break;
+                    
+                default:
+                    log(`📨 未知消息类型: ${event.data.type}`);
+            }
+        });
+        
+        // 页面加载完成后发送同步请求
+        iframe.onload = () => {
+            log('🔄 iframe加载完成，发送同步认证状态请求');
+            setTimeout(() => {
+                sendMessage('SYNC_AUTH_STATE');
+            }, 1000);
+        };
+        
+        log('🚀 测试页面已加载完成');
+    </script>
+</body>
+</html>
