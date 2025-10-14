@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { PrivyProvider, usePrivy, useCreateWallet, useWallets } from '@privy-io/react-auth'
+import { PrivyProvider, usePrivy, useCreateWallet, useWallets, useConnectWallet } from '@privy-io/react-auth'
 
 // Privy配置 - 使用真实的应用ID
 const privyConfig = {
@@ -52,6 +52,27 @@ function PrivyAuth() {
   const { login, logout, authenticated, user, ready } = usePrivy()
   const { createWallet } = useCreateWallet()
   const { wallets } = useWallets()
+  const { connectWallet } = useConnectWallet({
+    onSuccess: ({wallet}) => {
+      console.log('外部钱包连接成功:', wallet)
+      // 通知父窗口外部钱包连接成功
+      window.parent.postMessage({
+        type: 'EXTERNAL_WALLET_CONNECTED',
+        wallet: {
+          address: wallet.address,
+          chain: wallet.chain,
+          type: wallet.walletClientType
+        }
+      }, '*')
+    },
+    onError: (error) => {
+      console.error('外部钱包连接失败:', error)
+      window.parent.postMessage({
+        type: 'PRIVY_ERROR',
+        error: `连接外部钱包失败: ${error.message || error}`
+      }, '*')
+    }
+  })
   const [walletInfo, setWalletInfo] = useState(null)
   const [isCreatingWallet, setIsCreatingWallet] = useState(false)
   const [externalWallets, setExternalWallets] = useState([])
@@ -175,9 +196,12 @@ function PrivyAuth() {
       setIsConnectingExternal(true)
       console.log('开始连接外部钱包:', walletType)
       
-      // 使用Privy的登录系统来处理外部钱包连接
-      // 外部钱包连接应该通过Privy的登录流程来处理
-      await login({ method: 'wallet', wallet: { walletType } })
+      // 使用Privy的connectWallet方法来连接外部钱包
+      connectWallet({
+        wallet: {
+          walletType: walletType
+        }
+      })
       
       console.log('外部钱包连接流程已触发:', walletType)
       
@@ -349,52 +373,13 @@ function PrivyAuth() {
           {/* 外部钱包连接按钮 - 只有在用户认证后才显示 */}
           <div className="external-wallets-section">
             <h4>🌐 连接外部钱包</h4>
-            <div className="external-wallets-grid">
-              <button 
-                className="privy-button external-wallet-button"
-                onClick={() => handleConnectExternalWallet('metamask')}
-                disabled={isConnectingExternal}
-              >
-                <span className="wallet-icon">🦊</span>
-                MetaMask
-              </button>
-              
-              <button 
-                className="privy-button external-wallet-button"
-                onClick={() => handleConnectExternalWallet('coinbase-wallet')}
-                disabled={isConnectingExternal}
-              >
-                <span className="wallet-icon">💰</span>
-                Coinbase Wallet
-              </button>
-              
-              <button 
-                className="privy-button external-wallet-button"
-                onClick={() => handleConnectExternalWallet('wallet-connect')}
-                disabled={isConnectingExternal}
-              >
-                <span className="wallet-icon">🔗</span>
-                WalletConnect
-              </button>
-              
-              <button 
-                className="privy-button external-wallet-button"
-                onClick={() => handleConnectExternalWallet('rainbow')}
-                disabled={isConnectingExternal}
-              >
-                <span className="wallet-icon">🌈</span>
-                Rainbow
-              </button>
-              
-              <button 
-                className="privy-button external-wallet-button"
-                onClick={() => handleConnectExternalWallet('phantom')}
-                disabled={isConnectingExternal}
-              >
-                <span className="wallet-icon">👻</span>
-                Phantom
-              </button>
-            </div>
+            <button 
+              className="privy-button privy-button-primary"
+              onClick={() => handleConnectExternalWallet('metamask')}
+              disabled={isConnectingExternal}
+            >
+              {isConnectingExternal ? '⏳ 连接中...' : '🔗 连接外部钱包'}
+            </button>
           </div>
           
           {/* 创建钱包按钮 - 只有在没有钱包地址时显示 */}

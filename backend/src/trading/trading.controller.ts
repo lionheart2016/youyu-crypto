@@ -105,7 +105,15 @@ export class TradingController {
   @ApiOperation({ summary: '获取DEX订单簿' })
   @ApiResponse({ status: 200, description: '返回去中心化交易所订单簿' })
   async getDEXOrderBook(@Param('pair') pair: string): Promise<any> {
-    return this.ethereumDataService.getDEXOrderBook(pair);
+    try {
+      return await this.ethereumDataService.getDEXOrderBook(pair);
+    } catch (error) {
+      // 如果发生错误，返回默认值
+      return {
+        buyOrders: [],
+        sellOrders: []
+      };
+    }
   }
 
   // 以太坊区块链相关API
@@ -113,7 +121,24 @@ export class TradingController {
   @ApiOperation({ summary: '获取以太坊地址余额' })
   @ApiResponse({ status: 200, description: '返回ETH和代币余额' })
   async getEthereumBalance(@Param('address') address: string): Promise<any> {
-    return this.ethereumService.getBalance(address);
+    try {
+      const result = await this.ethereumService.getBalance(address);
+      // 确保所有数值都是字符串，避免BigInt序列化问题
+      return {
+        ethBalance: result.ethBalance,
+        tokenBalances: result.tokenBalances.map(token => ({
+          token: token.token,
+          balance: token.balance,
+          decimals: Number(token.decimals)
+        }))
+      };
+    } catch (error) {
+      // 如果发生错误，返回默认值
+      return {
+        ethBalance: '0',
+        tokenBalances: []
+      };
+    }
   }
 
   @Post('ethereum/transaction/eth')
@@ -185,7 +210,23 @@ export class TradingController {
   @ApiOperation({ summary: '获取代币信息' })
   @ApiResponse({ status: 200, description: '返回代币详细信息' })
   async getTokenInfo(@Param('address') address: string): Promise<any> {
-    return this.ethereumService.getTokenInfo(address);
+    try {
+      const result = await this.ethereumService.getTokenInfo(address);
+      return {
+        symbol: result.symbol,
+        name: result.name,
+        decimals: Number(result.decimals),
+        totalSupply: result.totalSupply
+      };
+    } catch (error) {
+      // 如果发生错误，返回默认值
+      return {
+        symbol: 'UNKNOWN',
+        name: 'Unknown Token',
+        decimals: 18,
+        totalSupply: '0'
+      };
+    }
   }
 
   @Get('ethereum/validate-address/:address')

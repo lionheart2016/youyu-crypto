@@ -111,21 +111,19 @@
 </template>
 
 <script>
-import walletStore from '../store/walletStore'
 import { ethers } from 'ethers'
 import { usePrivy } from '../contexts/PrivyContext.js'
 
 export default {
   name: 'EthereumTransaction',
   setup() {
-    const { signMessage } = usePrivy()
-    return { signMessage }
+    const privy = usePrivy()
+    const { signMessage } = privy
+    return { privy, signMessage }
   },
   data() {
     return {
-      walletConnected: false,
-      currentAccount: null,
-      unsubscribe: null,
+      // 移除旧的钱包状态相关属性
       
       transactionType: 'eth',
       toAddress: '',
@@ -150,6 +148,16 @@ export default {
     }
   },
   computed: {
+    // 使用Privy上下文获取钱包连接状态
+    walletConnected() {
+      return this.privy.walletAddress.value && this.privy.walletAddress.value.length > 0
+    },
+    
+    // 使用Privy上下文获取当前账户
+    currentAccount() {
+      return this.privy.walletAddress.value || null
+    },
+    
     isFormValid() {
       return this.toAddress && this.amount && this.isValidAddress(this.toAddress) && parseFloat(this.amount) > 0
     },
@@ -177,23 +185,11 @@ export default {
     }
   },
   created() {
-    // 订阅钱包状态变化
-    this.unsubscribe = walletStore.subscribe((state) => {
-      this.walletConnected = state.isConnected
-      this.currentAccount = state.account
-    })
-    
-    // 初始化状态
-    const state = walletStore.getState()
-    this.walletConnected = state.isConnected
-    this.currentAccount = state.account
+    // 不再需要订阅walletStore，直接使用Privy上下文
   },
   
   beforeUnmount() {
-    // 清理订阅
-    if (this.unsubscribe) {
-      this.unsubscribe()
-    }
+    // 不再需要取消订阅
   },
   
   methods: {
@@ -240,7 +236,7 @@ export default {
           params.append('tokenAddress', this.tokenAddresses[this.selectedToken])
         }
         
-        const response = await fetch(`/api/trading/ethereum/gas-estimation?${params}`)
+        const response = await fetch(`http://localhost:3003/trading/ethereum/gas-estimation?${params}`)
         
         if (response.ok) {
           this.gasEstimation = await response.json()
@@ -295,8 +291,8 @@ export default {
         
         // 调用后端API发送交易
         const endpoint = this.transactionType === 'eth' 
-          ? '/api/trading/ethereum/transaction/eth'
-          : '/api/trading/ethereum/transaction/token'
+          ? 'http://localhost:3003/trading/ethereum/transaction/eth'
+          : 'http://localhost:3003/trading/ethereum/transaction/token'
         
         const response = await fetch(endpoint, {
           method: 'POST',
@@ -332,7 +328,7 @@ export default {
       // 定期检查交易状态
       const checkInterval = setInterval(async () => {
         try {
-          const response = await fetch(`/api/trading/ethereum/transaction/${transactionHash}`)
+          const response = await fetch(`http://localhost:3003/trading/ethereum/transaction/${transactionHash}`)
           
           if (response.ok) {
             const status = await response.json()
@@ -354,7 +350,7 @@ export default {
       if (!this.transactionResult) return
       
       try {
-        const response = await fetch(`/api/trading/ethereum/transaction/${this.transactionResult.transactionHash}`)
+        const response = await fetch(`http://localhost:3003/trading/ethereum/transaction/${this.transactionResult.transactionHash}`)
         
         if (response.ok) {
           this.transactionStatus = await response.json()

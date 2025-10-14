@@ -12,7 +12,7 @@ export default defineConfig({
       allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
     },
     headers: {
-      'Cross-Origin-Embedder-Policy': 'cross-origin',
+      'Cross-Origin-Embedder-Policy': 'unsafe-none',
       'Cross-Origin-Opener-Policy': 'same-origin-allow-popups'
     }
   },

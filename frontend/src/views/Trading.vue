@@ -5,14 +5,7 @@
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold">交易市场</h2>
         <div class="flex items-center space-x-4">
-          <div class="wallet-status">
-            <span :class="{ 'connected': walletConnected, 'disconnected': !walletConnected }" class="px-3 py-1 rounded-full text-sm font-medium">
-              {{ walletConnected ? '钱包已连接' : '钱包未连接' }}
-            </span>
-            <span v-if="walletConnected" class="account-info text-gray-300 text-sm ml-2">
-              {{ currentAccount ? `${currentAccount.slice(0, 6)}...${currentAccount.slice(-4)}` : '' }}
-            </span>
-          </div>
+          <WalletStatus />
           <button 
             @click="fetchMarketData" 
             class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
@@ -215,8 +208,8 @@
         </div>
       </div>
       
-      <!-- 用户订单历史 -->
-      <div class="user-orders-section" v-if="walletConnected">
+      <!-- 我的订单 -->
+      <div v-if="privy.isAuthenticated.value && privy.walletAddress.value" class="user-orders-section">
         <h3 class="text-lg font-semibold mb-4">我的订单</h3>
         <div class="orders-list">
           <div class="order-item" v-for="order in userOrders" :key="order.id">
@@ -247,13 +240,15 @@
 </template>
 
 <script>
-import walletStore from '../store/walletStore'
 import EthereumTransaction from '../components/EthereumTransaction.vue'
+import WalletStatus from '../components/WalletStatus.vue'
+import { usePrivy } from '../contexts/PrivyContext.js'
 
 export default {
   name: 'Trading',
   components: {
-    EthereumTransaction
+    EthereumTransaction,
+    WalletStatus
   },
   data() {
     return {
@@ -267,33 +262,16 @@ export default {
       orderAmount: '',
       sellOrders: [],
       buyOrders: [],
-      walletConnected: false,
-      currentAccount: null,
-      unsubscribe: null,
       userOrders: [],
       currentPrice: 0,
       priceHigh: 0,
       priceLow: 0
     }
   },
-  created() {
-    // 订阅钱包状态变化
-    this.unsubscribe = walletStore.subscribe((state) => {
-      this.walletConnected = state.isConnected
-      this.currentAccount = state.account
-    })
-    
-    // 初始化状态
-    const state = walletStore.getState()
-    this.walletConnected = state.isConnected
-    this.currentAccount = state.account
-  },
   
-  beforeUnmount() {
-    // 清理订阅
-    if (this.unsubscribe) {
-      this.unsubscribe()
-    }
+  setup() {
+    const privy = usePrivy()
+    return { privy }
   },
   
   async mounted() {
@@ -388,8 +366,15 @@ export default {
 
     
     async placeOrder(side) {
-      // 检查钱包连接状态
-      if (!this.walletConnected || !this.currentAccount) {
+      // 检查钱包连接状态（通过Privy上下文检查）
+      if (!this.privy.isAuthenticated.value) {
+        alert('请先登录')
+        return
+      }
+      
+      const user = this.privy.user.value
+      const account = this.privy.walletAddress.value
+      if (!account) {
         alert('请先连接钱包')
         return
       }
@@ -407,7 +392,7 @@ export default {
       try {
         // 构建订单数据
         const orderData = {
-          userId: this.currentAccount,
+          userId: account, // 使用Privy提供的钱包地址
           symbol: this.selectedPair,
           type: side,
           orderType: this.orderType,
@@ -448,13 +433,14 @@ export default {
     
     // 获取用户订单历史
     async fetchUserOrders() {
-      if (!this.currentAccount) {
+      const account = this.privy.walletAddress.value
+      if (!account) {
         this.userOrders = []
         return
       }
       
       try {
-        const response = await fetch(`/api/trading/orders/${this.currentAccount}`)
+        const response = await fetch(`/api/trading/orders/${account}`)
         if (response.ok) {
           const orders = await response.json()
           this.userOrders = orders
@@ -470,10 +456,11 @@ export default {
     
     // 取消订单
     async cancelOrder(orderId) {
-      if (!this.currentAccount) return
+      const account = this.privy.walletAddress.value
+      if (!account) return
       
       try {
-        const response = await fetch(`/api/trading/order/${orderId}/cancel?userId=${this.currentAccount}`, {
+        const response = await fetch(`/api/trading/order/${orderId}/cancel?userId=${account}`, {
           method: 'PUT'
         })
         
@@ -494,17 +481,6 @@ export default {
 </script>
 
 <style scoped>
-/* 钱包状态样式 */
-.wallet-status .connected {
-  background-color: #10b981;
-  color: white;
-}
-
-.wallet-status .disconnected {
-  background-color: #6b7280;
-  color: white;
-}
-
 /* 标签页样式 */
 .trading-tabs {
   display: flex;
