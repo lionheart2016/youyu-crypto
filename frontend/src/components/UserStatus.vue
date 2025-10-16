@@ -3,7 +3,7 @@
     <!-- 未登录状态 - 显示登录按钮 -->
     <div v-if="!isAuthenticated" class="login-button-container">
       <button 
-        @click="handleLoginClick"
+        @click="openLoginModal"
         class="login-button flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-4 py-2 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
       >
         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -12,9 +12,16 @@
         <span>登录Privy</span>
       </button>
     </div>
+    
+    <!-- 登录模态框 -->
+    <LoginModal 
+      :is-open="showLoginModal" 
+      @close="closeLoginModal"
+      @login-success="handleLoginSuccess"
+    />
 
     <!-- 已登录状态 - 显示用户信息和钱包 -->
-    <div v-else class="user-info-container flex items-center space-x-3">
+    <div v-if="isAuthenticated" class="user-info-container flex items-center space-x-3">
       <!-- 用户头像 -->
       <div 
         @click="toggleUserMenu" 
@@ -131,13 +138,19 @@
 <script>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { usePrivy } from '../contexts/PrivyContext.js'
+import LoginModal from './LoginModal.vue'
 
 export default {
   name: 'UserStatus',
   
+  components: {
+    LoginModal
+  },
+  
   setup() {
     const privy = usePrivy()
     const showUserMenu = ref(false)
+    const showLoginModal = ref(false)
     const userStatusRef = ref(null)
     const selectedWallet = ref(null)
     
@@ -195,8 +208,17 @@ export default {
     })
     
     // 方法 - 处理登录点击
-    const handleLoginClick = () => {
-      privy.login()
+    const openLoginModal = () => {
+      showLoginModal.value = true
+    }
+    
+    const closeLoginModal = () => {
+      showLoginModal.value = false
+    }
+    
+    const handleLoginSuccess = () => {
+      console.log('登录成功')
+      closeLoginModal()
     }
     
     // 方法 - 切换用户菜单
@@ -252,6 +274,7 @@ export default {
     return {
       // 状态
       showUserMenu,
+      showLoginModal,
       userStatusRef,
       selectedWallet,
       
@@ -265,7 +288,9 @@ export default {
       currentWallet,
       
       // 方法
-      handleLoginClick,
+      openLoginModal,
+      closeLoginModal,
+      handleLoginSuccess,
       toggleUserMenu,
       truncatedWalletAddress,
       selectWallet,

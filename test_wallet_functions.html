@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>钱包功能测试 - 签名和转账</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .connected { background-color: #d4edda; color: #155724; }
+        .disconnected { background-color: #f8d7da; color: #721c24; }
+        .debug {
+            background-color: #e2e3e5;
+            border: 1px solid #d6d8db;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #6c757d; cursor: not-allowed; }
+        button.success { background-color: #28a745; }
+        button.danger { background-color: #dc3545; }
+        button.warning { background-color: #ffc107; color: #212529; }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .input-group {
+            margin: 10px 0;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .input-group input, .input-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+        .result-box {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+        }
+        .success-box { background: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .error-box { background: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        .warning-box { background: #fff3cd; border-color: #ffeaa7; color: #856404; }
+        .function-section {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            background: #ffffff;
+        }
+        .function-section h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+    </style>
+</head>
+<body>
+    <h1>钱包功能测试 - 签名和转账</h1>
+    
+    <div class="container">
+        <h2>测试控制面板</h2>
+        
+        <div class="input-group">
+            <button onclick="connectWallet()">🔐 连接钱包</button>
+            <button onclick="disconnectWallet()">🚪 断开钱包</button>
+            <button onclick="syncAuthState()">🔄 同步认证状态</button>
+            <button onclick="clearDebugLog()">🗑️ 清空日志</button>
+        </div>
+        
+        <div id="connectionStatus" class="status disconnected">未连接</div>
+        
+        <h3>钱包信息</h3>
+        <div id="walletInfo" class="debug">暂无钱包信息</div>
+        
+        <h3>调试日志</h3>
+        <div id="debugLog" class="debug"></div>
+    </div>
+
+    <div class="container">
+        <h2>Privy React 应用 (iframe)</h2>
+        <iframe id="privyIframe" src="http://localhost:3001"></iframe>
+    </div>
+
+    <div class="container">
+        <h2>钱包功能测试</h2>
+        
+        <!-- 签名功能测试 -->
+        <div class="function-section">
+            <h3>📝 消息签名</h3>
+            <div class="input-group">
+                <label for="signMessage">待签名消息:</label>
+                <textarea id="signMessage" rows="3" placeholder="输入要签名的消息...">Hello, Privy! This is a test message for signing.</textarea>
+            </div>
+            <button class="success" onclick="testSignMessage()">📝 签名消息</button>
+            <button class="warning" onclick="testSignCustomMessage()">🎯 签名自定义消息</button>
+            
+            <div id="signResult" class="result-box" style="display: none;"></div>
+        </div>
+        
+        <!-- 转账功能测试 -->
+        <div class="function-section">
+            <h3>💸 发送交易</h3>
+            <div class="input-group">
+                <label for="recipientAddress">接收地址:</label>
+                <input type="text" id="recipientAddress" value="0x742d35cc6634c0532925a3b844bc9e7595f0beb7" placeholder="0x...">
+            </div>
+            <div class="input-group">
+                <label for="transferAmount">转账金额 (ETH):</label>
+                <input type="number" id="transferAmount" value="0.001" step="0.001" min="0.0001">
+            </div>
+            <div class="input-group">
+                <label for="transactionData">交易数据 (可选):</label>
+                <input type="text" id="transactionData" placeholder="0x... (留空使用默认值)">
+            </div>
+            <div class="input-group">
+                <label>
+                    <input type="checkbox" id="waitForConfirmation" checked> 等待交易确认
+                </label>
+            </div>
+            
+            <button class="danger" onclick="testSendTransaction()">💸 发送交易</button>
+            <button class="warning" onclick="testSendQuickTransaction()">⚡ 快速发送测试交易</button>
+            
+            <div id="transactionResult" class="result-box" style="display: none;"></div>
+        </div>
+        
+        <!-- 高级功能测试 -->
+        <div class="function-section">
+            <h3>🔧 高级功能</h3>
+            <button class="success" onclick="testGetBalance()">💰 获取余额</button>
+            <button class="warning" onclick="testGetChainInfo()">🔗 获取链信息</button>
+            <button class="info" onclick="testPersonalMessage()">📧 签名个人消息</button>
+            
+            <div id="advancedResult" class="result-box" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        let isConnected = false;
+        let currentWallet = null;
+        let debugMessages = [];
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            debugMessages.push(logEntry);
+            
+            const debugLog = document.getElementById('debugLog');
+            debugLog.innerHTML = debugMessages.join('<br>');
+            debugLog.scrollTop = debugLog.scrollHeight;
+            
+            console.log(`[${type.toUpperCase()}] ${logEntry}`);
+        }
+
+        function updateConnectionStatus(connected, wallet = null) {
+            isConnected = connected;
+            currentWallet = wallet;
+            
+            const statusElement = document.getElementById('connectionStatus');
+            const walletInfoElement = document.getElementById('walletInfo');
+            
+            if (connected && wallet) {
+                statusElement.className = 'status connected';
+                statusElement.textContent = '已连接';
+                walletInfoElement.innerHTML = `
+                    <strong>地址:</strong> ${wallet.address}<br>
+                    <strong>链:</strong> ${wallet.chain || '未知'}<br>
+                    <strong>类型:</strong> ${wallet.type || '未知'}
+                `;
+            } else {
+                statusElement.className = 'status disconnected';
+                statusElement.textContent = '未连接';
+                walletInfoElement.innerHTML = '暂无钱包信息';
+            }
+            
+            log(`连接状态更新: ${connected ? '已连接' : '未连接'}`, 'status');
+        }
+
+        function connectWallet() {
+            log('开始连接钱包...', 'action');
+            
+            const iframe = document.getElementById('privyIframe');
+            iframe.contentWindow.postMessage({
+                type: 'OPEN_LOGIN_MODAL'
+            }, '*');
+            
+            log('已发送 OPEN_LOGIN_MODAL 消息到 iframe', 'sent');
+        }
+
+        function disconnectWallet() {
+            log('开始断开钱包...', 'action');
+            
+            const iframe = document.getElementById('privyIframe');
+            iframe.contentWindow.postMessage({
+                type: 'LOGOUT_REQUEST'
+            }, '*');
+            
+            log('已发送 LOGOUT_REQUEST 消息到 iframe', 'sent');
+        }
+
+        function syncAuthState() {
+            log('开始同步认证状态...', 'action');
+            
+            const iframe = document.getElementById('privyIframe');
+            iframe.contentWindow.postMessage({
+                type: 'SYNC_AUTH_STATE'
+            }, '*');
+            
+            log('已发送 SYNC_AUTH_STATE 消息到 iframe', 'sent');
+        }
+
+        function clearDebugLog() {
+            debugMessages = [];
+            document.getElementById('debugLog').innerHTML = '';
+            log('调试日志已清空', 'system');
+        }
+
+        // 签名功能测试
+        function testSignMessage() {
+            const message = document.getElementById('signMessage').value;
+            log(`开始签名消息: "${message}"`, 'action');
+            
+            const iframe = document.getElementById('privyIframe');
+            iframe.contentWindow.postMessage({
+                type: 'SIGN_MESSAGE_REQUEST',
+                message: message
+            }, '*');
+            
+            log('已发送 SIGN_MESSAGE_REQUEST 消息', 'sent');
+            document.getElementById('signResult').style.display = 'none';
+        }
+
+        function testSignCustomMessage() {
+            const message = prompt('请输入要签名的自定义消息:', 'Custom test message for signing');
+            if (message) {
+                document.getElementById('signMessage').value = message;
+                testSignMessage();
+            }
+        }
+
+        // 转账功能测试
+        function testSendTransaction() {
+            const recipient = document.getElementById('recipientAddress').value;
+            const amount = document.getElementById('transferAmount').value;
+            const data = document.getElementById('transactionData').value;
+            const waitForConfirmation = document.getElementById('waitForConfirmation').checked;
+            
+            log(`开始发送交易: ${amount} ETH 到 ${recipient}`, 'action');
+            
+            const transactionData = {
+                to: recipient,
+                value: amount,
+                waitForConfirmation: waitForConfirmation
+            };
+            
+            if (data && data.trim() !== '') {
+                transactionData.data = data;
+            }
+            
+            const iframe = document.getElementById('privyIframe');
+            iframe.contentWindow.postMessage({
+                type: 'SEND_TRANSACTION_REQUEST',
+                transactionData: transactionData
+            }, '*');
+            
+            log('已发送 SEND_TRANSACTION_REQUEST 消息', 'sent');
+            document.getElementById('transactionResult').style.display = 'none';
+        }
+
+        function testSendQuickTransaction() {
+            document.getElementById('recipientAddress').value = '0x742d35cc6634c0532925a3b844bc9e7595f0beb7';
+            document.getElementById('transferAmount').value = '0.001';
+            document.getElementById('transactionData').value = '';
+            document.getElementById('waitForConfirmation').checked = false;
+            testSendTransaction();
+        }
+
+        // 高级功能测试
+        function testGetBalance() {
+            log('获取余额功能 - 需要通过后端服务', 'info');
+            showAdvancedResult('余额功能', '需要通过后端服务获取余额信息', 'warning');
+        }
+
+        function testGetChainInfo() {
+            log('获取链信息功能', 'info');
+            if (currentWallet) {
+                showAdvancedResult('链信息', `当前链: ${currentWallet.chain || '未知'}`, 'success');
+            } else {
+                showAdvancedResult('链信息', '未连接钱包', 'error');
+            }
+        }
+
+        function testPersonalMessage() {
+            const message = prompt('请输入个人消息:', 'Personal message for signing');
+            if (message) {
+                document.getElementById('signMessage').value = message;
+                testSignMessage();
+            }
+        }
+
+        function showAdvancedResult(title, content, type = 'info') {
+            const resultElement = document.getElementById('advancedResult');
+            resultElement.className = `result-box ${type}-box`;
+            resultElement.innerHTML = `
+                <strong>${title}:</strong><br>
+                ${content}
+            `;
+            resultElement.style.display = 'block';
+        }
+
+        // 监听来自 iframe 的消息
+        window.addEventListener('message', (event) => {
+            log(`收到消息类型: ${event.data.type}`, 'received');
+            
+            switch (event.data.type) {
+                case 'PRIVY_AUTH_STATE':
+                    handleAuthState(event.data);
+                    break;
+                    
+                case 'EXTERNAL_WALLET_CONNECTED':
+                    handleExternalWalletConnected(event.data);
+                    break;
+                    
+                case 'WALLET_CREATED':
+                    handleWalletCreated(event.data);
+                    break;
+                    
+                case 'SIGN_SUCCESS':
+                    handleSignSuccess(event.data);
+                    break;
+                    
+                case 'SIGN_ERROR':
+                    handleSignError(event.data);
+                    break;
+                    
+                case 'TRANSACTION_SUCCESS':
+                    handleTransactionSuccess(event.data);
+                    break;
+                    
+                case 'TRANSACTION_ERROR':
+                    handleTransactionError(event.data);
+                    break;
+                    
+                case 'PRIVY_ERROR':
+                    handleError(event.data);
+                    break;
+                    
+                default:
+                    log(`未知消息类型: ${event.data.type}`, 'warning');
+            }
+        });
+
+        function handleAuthState(data) {
+            log(`认证状态: ${data.authenticated}`, 'auth');
+            
+            if (data.authenticated && data.user) {
+                log(`用户信息: ${JSON.stringify(data.user, null, 2)}`, 'auth');
+                
+                if (data.user.walletAddress) {
+                    updateConnectionStatus(true, {
+                        address: data.user.walletAddress,
+                        type: 'embedded'
+                    });
+                } else {
+                    log('用户已认证但没有钱包地址', 'warning');
+                    updateConnectionStatus(false);
+                }
+            } else {
+                updateConnectionStatus(false);
+            }
+        }
+
+        function handleExternalWalletConnected(data) {
+            log(`外部钱包连接: ${JSON.stringify(data.wallet, null, 2)}`, 'wallet');
+            
+            if (data.wallet && data.wallet.address) {
+                updateConnectionStatus(true, {
+                    address: data.wallet.address,
+                    chain: data.wallet.chain,
+                    type: 'external'
+                });
+            }
+        }
+
+        function handleWalletCreated(data) {
+            log(`钱包创建: ${JSON.stringify(data.wallet, null, 2)}`, 'wallet');
+            
+            if (data.wallet && data.wallet.address) {
+                updateConnectionStatus(true, {
+                    address: data.wallet.address,
+                    chain: data.wallet.chain,
+                    type: 'embedded'
+                });
+            }
+        }
+
+        function handleSignSuccess(data) {
+            log(`签名成功: ${JSON.stringify(data.result, null, 2)}`, 'success');
+            
+            const resultElement = document.getElementById('signResult');
+            resultElement.className = 'result-box success-box';
+            resultElement.innerHTML = `
+                <strong>✅ 签名成功!</strong><br>
+                <strong>签名:</strong> ${data.result.signature}<br>
+                <strong>消息:</strong> ${data.result.message}<br>
+                <strong>地址:</strong> ${data.result.address}
+            `;
+            resultElement.style.display = 'block';
+        }
+
+        function handleSignError(data) {
+            log(`签名错误: ${data.error}`, 'error');
+            
+            const resultElement = document.getElementById('signResult');
+            resultElement.className = 'result-box error-box';
+            resultElement.innerHTML = `<strong>❌ 签名失败:</strong> ${data.error}`;
+            resultElement.style.display = 'block';
+        }
+
+        function handleTransactionSuccess(data) {
+            log(`交易成功: ${JSON.stringify(data.result, null, 2)}`, 'success');
+            
+            const resultElement = document.getElementById('transactionResult');
+            resultElement.className = 'result-box success-box';
+            resultElement.innerHTML = `
+                <strong>✅ 交易发送成功!</strong><br>
+                <strong>交易哈希:</strong> ${data.result.hash}<br>
+                <strong>从:</strong> ${data.result.from}<br>
+                <strong>到:</strong> ${data.result.to}<br>
+                <strong>金额:</strong> ${data.result.value} ETH
+            `;
+            resultElement.style.display = 'block';
+        }
+
+        function handleTransactionError(data) {
+            log(`交易错误: ${data.error}`, 'error');
+            
+            const resultElement = document.getElementById('transactionResult');
+            resultElement.className = 'result-box error-box';
+            resultElement.innerHTML = `<strong>❌ 交易发送失败:</strong> ${data.error}`;
+            resultElement.style.display = 'block';
+        }
+
+        function handleError(data) {
+            log(`错误: ${data.message || '未知错误'}`, 'error');
+            
+            if (data.details) {
+                log(`错误详情: ${JSON.stringify(data.details, null, 2)}`, 'error');
+            }
+        }
+
+        // 初始化
+        log('钱包功能测试页面已加载，等待 iframe 加载...', 'system');
+        
+        // 等待 iframe 加载完成
+        document.getElementById('privyIframe').addEventListener('load', () => {
+            log('iframe 加载完成', 'system');
+            
+            // 延迟发送同步请求，确保 iframe 完全准备好
+            setTimeout(() => {
+                syncAuthState();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

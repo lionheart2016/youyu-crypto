@@ -116,6 +116,12 @@ import { usePrivy } from '../contexts/PrivyContext.js'
 
 export default {
   name: 'EthereumTransaction',
+  props: {
+    initialParams: {
+      type: Object,
+      default: null
+    }
+  },
   setup() {
     const privy = usePrivy()
     const { signMessage } = privy
@@ -150,7 +156,16 @@ export default {
   computed: {
     // 使用Privy上下文获取钱包连接状态
     walletConnected() {
-      return this.privy.walletAddress.value && this.privy.walletAddress.value.length > 0
+      console.log('walletConnected 计算属性被调用')
+      console.log('privy 对象:', this.privy)
+      console.log('walletAddress:', this.privy?.walletAddress)
+      console.log('walletAddress.value:', this.privy?.walletAddress?.value)
+      console.log('currentWallet:', this.privy?.currentWallet)
+      console.log('isAuthenticated:', this.privy?.isAuthenticated)
+      
+      const connected = !!(this.privy && this.privy.walletAddress && this.privy.walletAddress.value)
+      console.log('walletConnected 状态:', connected)
+      return connected
     },
     
     // 使用Privy上下文获取当前账户
@@ -186,6 +201,30 @@ export default {
   },
   created() {
     // 不再需要订阅walletStore，直接使用Privy上下文
+  },
+  
+  mounted() {
+    // 处理初始参数
+    if (this.initialParams) {
+      console.log('接收到初始参数:', this.initialParams)
+      
+      // 根据参数设置默认值
+      if (this.initialParams.type === 'buy') {
+        // 买入时，设置默认收款地址为交易所地址或用户自己的地址
+        this.toAddress = this.currentAccount || ''
+        this.amount = this.initialParams.amount || '0.1'
+      } else if (this.initialParams.type === 'sell') {
+        // 卖出时，可以设置其他参数
+        this.amount = this.initialParams.amount || '0.1'
+      }
+      
+      // 如果用户点击了链上交易按钮，可以自动开始Gas估算
+      if (this.initialParams.type && this.currentAccount) {
+        setTimeout(() => {
+          this.estimateGas()
+        }, 1000)
+      }
+    }
   },
   
   beforeUnmount() {
@@ -236,7 +275,7 @@ export default {
           params.append('tokenAddress', this.tokenAddresses[this.selectedToken])
         }
         
-        const response = await fetch(`http://localhost:3003/trading/ethereum/gas-estimation?${params}`)
+        const response = await fetch(`http://localhost:3002/trading/ethereum/gas-estimation?${params}`)
         
         if (response.ok) {
           this.gasEstimation = await response.json()
@@ -256,9 +295,25 @@ export default {
     async sendTransaction() {
       if (!await this.validateForm()) return
       
+      console.log('=== 发送交易开始 ===');
+      console.log('walletConnected:', this.walletConnected);
+      console.log('currentAccount:', this.currentAccount);
+      console.log('privy对象:', this.privy);
+      console.log('privy.walletAddress:', this.privy?.walletAddress);
+      console.log('privy.isAuthenticated:', this.privy?.isAuthenticated);
+      
+      // 检查钱包连接状态
+      // if (!this.walletConnected || !this.currentAccount) {
+      //   console.log('钱包未连接或账户不存在');
+      //   alert('请先连接钱包')
+      //   return
+      // }
+      
       this.isSending = true
       
       try {
+        console.log('开始发送交易，当前账户:', this.currentAccount)
+        
         // 使用Privy钱包签名
         let message
         let transactionData
@@ -282,6 +337,8 @@ export default {
           }
         }
         
+        console.log('交易数据:', transactionData)
+        
         // 使用Privy签名消息
         const signature = await this.signMessage(message)
         if (!signature) {
@@ -289,10 +346,14 @@ export default {
         }
         transactionData.signature = signature
         
+        console.log('签名成功:', signature)
+        
         // 调用后端API发送交易
         const endpoint = this.transactionType === 'eth' 
-          ? 'http://localhost:3003/trading/ethereum/transaction/eth'
-          : 'http://localhost:3003/trading/ethereum/transaction/token'
+          ? 'http://localhost:3002/trading/ethereum/transaction/eth'
+          : 'http://localhost:3002/trading/ethereum/transaction/token'
+        
+        console.log('调用后端API:', endpoint)
         
         const response = await fetch(endpoint, {
           method: 'POST',
@@ -301,6 +362,8 @@ export default {
           },
           body: JSON.stringify(transactionData)
         })
+        
+        console.log('后端响应状态:', response.status)
         
         if (response.ok) {
           const result = await response.json()
@@ -313,8 +376,18 @@ export default {
             this.monitorTransaction(result.transactionHash)
           }
         } else {
-          const errorData = await response.json()
-          throw new Error(errorData.message || '交易发送失败')
+          const errorText = await response.text()
+          console.error('后端错误响应:', errorText)
+          
+          let errorMessage = '交易发送失败'
+          try {
+            const errorData = JSON.parse(errorText)
+            errorMessage = errorData.message || errorMessage
+          } catch (e) {
+            errorMessage = errorText || errorMessage
+          }
+          
+          throw new Error(errorMessage)
         }
       } catch (error) {
         console.error('发送交易失败:', error)
@@ -328,7 +401,7 @@ export default {
       // 定期检查交易状态
       const checkInterval = setInterval(async () => {
         try {
-          const response = await fetch(`http://localhost:3003/trading/ethereum/transaction/${transactionHash}`)
+          const response = await fetch(`http://localhost:3002/trading/ethereum/transaction/${transactionHash}`)
           
           if (response.ok) {
             const status = await response.json()
@@ -350,7 +423,7 @@ export default {
       if (!this.transactionResult) return
       
       try {
-        const response = await fetch(`http://localhost:3003/trading/ethereum/transaction/${this.transactionResult.transactionHash}`)
+        const response = await fetch(`http://localhost:3002/trading/ethereum/transaction/${this.transactionResult.transactionHash}`)
         
         if (response.ok) {
           this.transactionStatus = await response.json()

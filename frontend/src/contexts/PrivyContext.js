@@ -65,12 +65,14 @@ export const createPrivyContext = () => {
       console.log('🎉 收到钱包创建成功消息:', event.data.wallet)
       
       if (event.data.wallet && event.data.wallet.address) {
-        // 更新钱包地址和余额
+        // 更新钱包地址、余额和认证状态
         walletAddress.value = event.data.wallet.address
         walletBalance.value = '0.00' // 可以在这里添加获取真实余额的逻辑
+        isAuthenticated.value = true // 钱包创建成功也视为已认证
         
         console.log('✅ 钱包创建成功，地址:', event.data.wallet.address)
         console.log('✅ 链类型:', event.data.wallet.chain)
+        console.log('✅ 认证状态:', isAuthenticated.value)
         
         // 显示成功通知（可选）
         if (typeof window !== 'undefined' && window.dispatchEvent) {
@@ -89,11 +91,13 @@ export const createPrivyContext = () => {
       console.log('🎉 收到外部钱包连接成功消息:', event.data.wallet)
       
       if (event.data.wallet && event.data.wallet.address) {
-        // 更新钱包地址
+        // 更新钱包地址和认证状态
         walletAddress.value = event.data.wallet.address
+        isAuthenticated.value = true // 外部钱包连接也视为已认证
         console.log('✅ 外部钱包连接成功，地址:', event.data.wallet.address)
         console.log('✅ 钱包类型:', event.data.wallet.type)
         console.log('✅ 链类型:', event.data.wallet.chain)
+        console.log('✅ 认证状态:', isAuthenticated.value)
         
         // 隐藏iframe
         hidePrivyIframe()
@@ -303,6 +307,40 @@ export const createPrivyContext = () => {
     }
   }
   
+  // Apple登录处理
+  const handleAppleLogin = async () => {
+    try {
+      console.log('处理Apple登录')
+      
+      // 使用Privy进行真实Apple登录
+      const result = await loginWithPrivy({ method: 'apple' })
+      
+      console.log('Apple登录成功:', result)
+      
+      return result
+    } catch (error) {
+      console.error('Apple登录处理失败:', error)
+      throw error
+    }
+  }
+  
+  // GitHub登录处理
+  const handleGitHubLogin = async () => {
+    try {
+      console.log('处理GitHub登录')
+      
+      // 使用Privy进行真实GitHub登录
+      const result = await loginWithPrivy({ method: 'github' })
+      
+      console.log('GitHub登录成功:', result)
+      
+      return result
+    } catch (error) {
+      console.error('GitHub登录处理失败:', error)
+      throw error
+    }
+  }
+  
   // 邮箱登录处理
   const handleEmailLogin = async (email, verificationCode) => {
     try {
@@ -408,6 +446,11 @@ export const createPrivyContext = () => {
   
   // 真实签名消息
   const signMessageWithPrivy = async (message) => {
+    console.log('=== signMessageWithPrivy 开始 ===');
+    console.log('isAuthenticated:', isAuthenticated.value);
+    console.log('currentWallet:', currentWallet.value);
+    console.log('walletAddress:', walletAddress.value);
+    
     if (!isAuthenticated.value) {
       throw new Error('用户未认证')
     }
@@ -418,6 +461,7 @@ export const createPrivyContext = () => {
       
       // 检查是否有真实的钱包连接
       if (!currentWallet.value || !walletAddress.value) {
+        console.log('钱包未连接 - currentWallet:', currentWallet.value, 'walletAddress:', walletAddress.value);
         throw new Error('请先连接钱包')
       }
       
@@ -476,6 +520,8 @@ export const createPrivyContext = () => {
     connectWallet,
     disconnectWallet,
     handleGoogleLogin,
+    handleAppleLogin,
+    handleGitHubLogin,
     isGoogleLoginEnabled,
     sendEmailVerificationCode,
     handleEmailLogin,

@@ -1,0 +1,24 @@
+{
+  "name": "yy-wallet",
+  "version": "1.0.0",
+  "description": "![YouyuCrypto Logo](https://via.placeholder.com/150x50/3B82F6/FFFFFF?text=YouyuCrypto)",
+  "main": "console-logger.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lionheart2016/youyu-crypto.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/lionheart2016/youyu-crypto/issues"
+  },
+  "homepage": "https://github.com/lionheart2016/youyu-crypto#readme",
+  "dependencies": {
+    "ethers": "^6.15.0"
+  }
+}

@@ -8,10 +8,11 @@ export const privyConfig = {
   // 支持的链配置 - 使用链ID
   supportedChains: [
     { chainId: 1, name: 'Ethereum' },
+    { chainId: 11155111, name: 'Sepolia' },
     { chainId: 137, name: 'Polygon' },
     { chainId: 10, name: 'Optimism' },
     { chainId: 42161, name: 'Arbitrum' }
-  ],
+  ],"explanation":"添加Sepolia测试网络支持"}
   
   // 登录方式配置
   loginMethods: ['wallet', 'email', 'sms', 'google', 'apple', 'discord'],
@@ -29,7 +30,7 @@ export const privyConfig = {
   },
   
   // 默认链
-  defaultChain: { chainId: 1, name: 'Ethereum' }
+  defaultChain: { chainId: 11155111, name: 'Sepolia' }
 };
 
 export { PrivyProvider };

@@ -204,7 +204,7 @@
         </div>
 
         <div v-if="activeTab === 'ethereum'">
-          <EthereumTransaction />
+          <EthereumTransaction :initial-params="ethereumTransactionParams" />
         </div>
       </div>
       
@@ -265,7 +265,8 @@ export default {
       userOrders: [],
       currentPrice: 0,
       priceHigh: 0,
-      priceLow: 0
+      priceLow: 0,
+      ethereumTransactionParams: null
     }
   },
   
@@ -276,6 +277,23 @@ export default {
   
   async mounted() {
     await this.fetchMarketData()
+
+    // 检查URL参数，如果有以太坊交易参数则切换到对应标签页
+    const urlParams = new URLSearchParams(window.location.search)
+    const tab = urlParams.get('tab')
+    const type = urlParams.get('type')
+    const crypto = urlParams.get('crypto')
+    const amount = urlParams.get('amount')
+
+    if (tab === 'ethereum') {
+      this.activeTab = 'ethereum'
+      // 如果有更多参数，可以传递给EthereumTransaction组件
+      this.ethereumTransactionParams = {
+        type: type,
+        crypto: crypto,
+        amount: amount
+      }
+    }
   },
   methods: {
     async fetchMarketData() {

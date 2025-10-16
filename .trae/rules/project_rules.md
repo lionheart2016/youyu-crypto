@@ -4,3 +4,4 @@
 4，react-privy-app为React项目，负责Privy认证，它以iframe的形式嵌入到Vue应用中 默认运行在http://localhost:3001
 5，frontend与react-privy-app通过postMessage实现跨窗口通信，实现用户登录状态同步和用户登出
 6，项目不要再使用模拟数据
+7，测试 账号：test-1143@privy.io，验证码：894575

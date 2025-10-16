@@ -29,6 +29,17 @@
           >
             立即买入
           </button>
+          
+          <!-- 以太坊链上买入按钮 -->
+          <EthereumTransactionButton
+            v-if="buyCrypto === 'ETH'"
+            type="basic"
+            button-text="链上买入"
+            :button-class="'w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg font-medium transition-colors'"
+            :amount="buyAmount"
+            @transaction-sent="handleTransactionSent"
+            @transaction-failed="handleTransactionFailed"
+          />
         </div>
       </div>
 
@@ -60,6 +71,17 @@
           >
             立即卖出
           </button>
+          
+          <!-- 以太坊链上卖出按钮 -->
+          <EthereumTransactionButton
+            v-if="sellCrypto === 'ETH'"
+            type="basic"
+            button-text="链上卖出"
+            :button-class="'w-full bg-purple-500 hover:bg-purple-600 text-white py-2 rounded-lg font-medium transition-colors'"
+            :amount="sellAmount"
+            @transaction-sent="handleTransactionSent"
+            @transaction-failed="handleTransactionFailed"
+          />
         </div>
       </div>
     </div>
@@ -89,8 +111,13 @@
 </template>
 
 <script>
+import EthereumTransactionButton from './EthereumTransactionButton.vue'
+
 export default {
   name: 'QuickTrade',
+  components: {
+    EthereumTransactionButton
+  },
   data() {
     return {
       buyCrypto: 'ETH',
@@ -211,6 +238,18 @@ export default {
         console.error('获取交易历史失败:', error);
         this.recentTrades = [];
       }
+    },
+    
+    handleTransactionSent(result) {
+      console.log('链上交易成功:', result);
+      alert('链上交易已成功提交！');
+      // 刷新交易历史
+      this.fetchRecentTrades();
+    },
+    
+    handleTransactionFailed(error) {
+      console.error('链上交易失败:', error);
+      alert('链上交易失败: ' + error.message);
     }
   }
 }

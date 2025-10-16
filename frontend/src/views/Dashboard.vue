@@ -38,6 +38,7 @@
           v-for="crypto in topCryptos" 
           :key="crypto.symbol"
           :crypto="crypto"
+          @ethereum-transaction="handleEthereumTransaction"
         />
       </div>
     </div>
@@ -94,6 +95,37 @@ export default {
           icon: '🟣'
         }
       ]
+    }
+  },
+  mounted() {
+    // 检查URL参数，如果有以太坊交易参数则自动跳转
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get('tab');
+    const type = urlParams.get('type');
+    const crypto = urlParams.get('crypto');
+    const amount = urlParams.get('amount');
+    
+    if (tab === 'ethereum' && type && crypto) {
+      console.log('检测到以太坊交易参数，自动跳转到交易页面:', { tab, type, crypto, amount });
+      this.$router.push({
+        path: '/trading',
+        query: { tab, type, crypto, amount }
+      });
+    }
+  },
+  methods: {
+    handleEthereumTransaction(transactionData) {
+      console.log('处理以太坊交易:', transactionData);
+      // 如果用户点击了链上交易按钮，直接跳转到交易页面
+      this.$router.push({
+        path: '/trading',
+        query: {
+          tab: 'ethereum',
+          type: transactionData.type,
+          crypto: transactionData.crypto.symbol,
+          amount: transactionData.amount
+        }
+      });
     }
   }
 }
