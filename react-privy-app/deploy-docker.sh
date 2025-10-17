@@ -56,7 +56,6 @@ echo "🔍 检查容器状态..."
 sleep 3
 if docker-compose ps | grep -q "Up"; then
     echo "✅ Docker容器启动成功"
-    echo "🌐 React应用已部署到: http://localhost:3000"
 else
     echo "❌ Docker容器启动失败"
     echo "📋 查看日志:"
