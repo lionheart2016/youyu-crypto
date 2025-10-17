@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { ethers } from 'ethers'
 import { usePrivy } from '@privy-io/react-auth'
 
 const TransactionSender = ({ 
@@ -71,6 +70,25 @@ const TransactionSender = ({
 
   const cancelTransaction = () => {
     setShowTransactionPreview(false)
+  }
+
+  // 将ETH转换为wei的函数（替代ethers.parseEther）
+  const ethToWei = (ethAmount) => {
+    // 1 ETH = 10^18 wei
+    const weiPerEth = BigInt('1000000000000000000')
+    const ethAmountStr = ethAmount.toString()
+    
+    // 处理小数点
+    const parts = ethAmountStr.split('.')
+    const wholePart = parts[0] || '0'
+    const decimalPart = parts[1] || ''
+    
+    // 确保小数部分有18位
+    const paddedDecimal = decimalPart.padEnd(18, '0').slice(0, 18)
+    
+    // 组合成完整的wei值
+    const totalWeiStr = wholePart + paddedDecimal
+    return BigInt(totalWeiStr)
   }
 
   // 处理转账请求
@@ -219,12 +237,12 @@ const TransactionSender = ({
         console.log('💰 原始value:', value)
         console.log('📊 value类型:', typeof value)
         
-        // 确保value是字符串格式，并使用parseEther转换为wei
+        // 确保value是字符串格式，并使用手动函数转换为wei
         const valueStr = String(value)
         console.log('📝 转换后的value字符串:', valueStr)
         
-        console.log('⚡ 准备调用ethers.parseEther...')
-        const valueInWei = ethers.parseEther(valueStr)
+        console.log('⚡ 准备调用ethToWei函数...')
+        const valueInWei = ethToWei(valueStr)
         console.log('💎 转换后的value (wei):', valueInWei.toString())
         
         const fromAddress = wallet.address || walletInfo.address
@@ -305,57 +323,27 @@ const TransactionSender = ({
           console.log('usePrivy sendTransaction成功:', txResponse)
           
         }  else {
-          // 如果Privy SDK方法都不可用，使用ethers.js作为备用方案
-          console.log('Privy SDK方法不可用，使用ethers.js备用方案...')
+          // 如果Privy SDK方法不可用，尝试重新创建钱包
+          console.log('Privy SDK方法不可用，尝试重新创建钱包...')
           
-          if (walletInfo.type === 'embedded') {
-            console.log('使用嵌入式钱包的ethers交易功能...')
+          try {
+            const newWallet = await createWallet()
             
-            try {
-              // 获取provider - 使用Sepolia网络的JsonRpcProvider
-              console.log('使用Sepolia网络RPC创建JsonRpcProvider')
-              const provider = new ethers.JsonRpcProvider('https://ethereum-sepolia-rpc.publicnode.com')
-              
-              // 验证provider连接
-              const network = await provider.getNetwork()
-              console.log('Provider网络信息:', network)
-              console.log('Chain ID:', network.chainId.toString())
-              
-              // 对于嵌入式钱包，我们需要获取钱包的签名功能
-              let signer
-              
-              if (wallet.getSigner) {
-                // 如果钱包对象有getSigner方法
-                console.log('使用wallet.getSigner获取签名器...')
-                signer = await wallet.getSigner()
-              } else if (wallet.signer) {
-                // 如果钱包对象直接有signer属性
-                console.log('使用wallet.signer作为签名器...')
-                signer = wallet.signer
-              } else {
-                // 尝试创建provider signer
-                console.log('使用provider.getSigner获取签名器...')
-                signer = await provider.getSigner(wallet.address || walletInfo.address)
+            if (newWallet && newWallet.sendTransaction) {
+              console.log('使用新创建的钱包发送交易...')
+              const privyTransaction = {
+                to: transaction.to,
+                value: transaction.value.toString(),
+                data: transaction.data || '0x',
+                chain: newWallet.chain || 'ethereum'
               }
-              
-              if (!signer) {
-                throw new Error('无法获取签名器')
-              }
-              
-              console.log('获取到signer:', signer)
-              
-              // 使用signer发送交易
-              console.log('使用signer发送交易...')
-              txResponse = await signer.sendTransaction(transaction)
-              console.log('ethers.js交易发送成功:', txResponse)
-              
-            } catch (ethersError) {
-              console.error('ethers.js交易发送失败:', ethersError)
-              throw new Error(`ethers.js交易失败: ${ethersError.message}`)
+              txResponse = await newWallet.sendTransaction(privyTransaction)
+            } else {
+              throw new Error('新创建的钱包不支持交易功能')
             }
-            
-          } else {
-            throw new Error('无法获取钱包交易功能')
+          } catch (backupError) {
+            console.error('重新创建钱包也失败:', backupError)
+            throw new Error(`交易发送失败: ${txError.message || '未知错误'}`)
           }
         }
       } catch (txError) {

@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  react-privy-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    networks:
+      - privy-network
+
+networks:
+  privy-network:
+    driver: bridge

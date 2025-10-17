@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import { PrivyProvider, usePrivy, useCreateWallet, useWallets, useConnectWallet } from '@privy-io/react-auth'
-import { ethers } from 'ethers'
 import TransactionSender from './components/TransactionSender'
 import UserInfo from './components/UserInfo'
 import WalletList from './components/WalletList'
@@ -94,12 +93,10 @@ function PrivyAuth() {
   // 签名和转账功能状态
   const [isSigning, setIsSigning] = useState(false)
   const [signResult, setSignResult] = useState(null)
-  const [isSendingTransaction, setIsSendingTransaction] = useState(false)
   
   // 钱包管理状态
   const [activeWallet, setActiveWallet] = useState(null)
   const [allWallets, setAllWallets] = useState([])
-  const [walletBalances, setWalletBalances] = useState({})
 
   useEffect(() => {
     // 监听来自父窗口的消息
@@ -176,7 +173,7 @@ function PrivyAuth() {
         email: user.email?.address,
         name: user.google?.name || user.email?.address?.split('@')[0],
         walletAddress: walletAddress, // 使用外部钱包或嵌入式钱包地址
-        balance: '0.00' // 可以在这里添加真实的余额信息
+        balance: '0.00' // 默认余额为0.00，不再从后端获取
       }
       
       console.log('发送认证成功消息:', userInfo)
@@ -279,11 +276,6 @@ function PrivyAuth() {
     console.log('最终所有钱包列表:', walletList)
     console.log('处理的钱包地址:', Array.from(processedAddresses))
     
-    // 获取所有钱包的余额
-    if (walletList.length > 0) {
-      fetchWalletBalances(walletList)
-    }
-    
     // 设置默认激活钱包（优先使用外部钱包，如果没有则使用嵌入式钱包）
     if (walletList.length > 0 && !activeWallet) {
       const defaultWallet = externalWalletsList.length > 0 ? walletList.find(w => w.type === 'external') : walletList[0]
@@ -309,38 +301,22 @@ function PrivyAuth() {
         }, '*')
       }
       
-      // 同时更新认证状态，确保包含钱包地址和余额
+      // 同时更新认证状态，确保包含钱包地址和默认余额
       if (authenticated && user) {
-        // 获取真实余额
-        const fetchBalance = async () => {
-          try {
-            const response = await fetch(`http://localhost:3002/wallet/balance/${defaultWallet.address}`)
-            if (response.ok) {
-              const balance = await response.json()
-              return balance
-            }
-          } catch (error) {
-            console.error('获取余额失败:', error)
-          }
-          return '0.00'
+        const userInfo = {
+          id: user.id,
+          email: user.email?.address,
+          name: user.google?.name || user.email?.address?.split('@')[0],
+          walletAddress: defaultWallet.address, // 使用激活钱包地址
+          balance: '0.00' // 默认余额为0.00，不再从后端获取
         }
         
-        fetchBalance().then(balance => {
-          const userInfo = {
-            id: user.id,
-            email: user.email?.address,
-            name: user.google?.name || user.email?.address?.split('@')[0],
-            walletAddress: defaultWallet.address, // 使用激活钱包地址
-            balance: balance
-          }
-          
-          console.log('更新认证状态，包含激活钱包地址和余额:', userInfo)
-          window.parent.postMessage({
-            type: 'PRIVY_AUTH_STATE',
-            authenticated: true,
-            user: userInfo
-          }, '*')
-        })
+        console.log('更新认证状态，包含激活钱包地址和余额:', userInfo)
+        window.parent.postMessage({
+          type: 'PRIVY_AUTH_STATE',
+          authenticated: true,
+          user: userInfo
+        }, '*')
       }
     }
   }, [wallets, walletsReady, authenticated, user, activeWallet])
@@ -371,29 +347,6 @@ function PrivyAuth() {
     }
   }
 
-  // 获取钱包余额
-  const fetchWalletBalances = async (wallets) => {
-    const balances = {}
-    
-    for (const wallet of wallets) {
-      try {
-        const response = await fetch(`http://localhost:3002/wallet/balance/${wallet.address}`)
-        if (response.ok) {
-          const balance = await response.json()
-          balances[wallet.address] = balance
-        } else {
-          balances[wallet.address] = '0.00'
-        }
-      } catch (error) {
-        console.error(`获取钱包 ${wallet.address} 余额失败:`, error)
-        balances[wallet.address] = '0.00'
-      }
-    }
-    
-    setWalletBalances(balances)
-    return balances
-  }
-
   // 激活特定钱包
   const handleActivateWallet = (wallet) => {
     console.log('激活钱包:', wallet)
@@ -406,23 +359,6 @@ function PrivyAuth() {
       type: wallet.type,
       walletType: wallet.walletType
     })
-    
-    // 获取激活钱包的余额
-    const fetchBalance = async () => {
-      try {
-        const response = await fetch(`http://localhost:3002/wallet/balance/${wallet.address}`)
-        if (response.ok) {
-          const balance = await response.json()
-          setWalletBalances(prev => ({
-            ...prev,
-            [wallet.address]: balance
-          }))
-        }
-      } catch (error) {
-        console.error(`获取钱包 ${wallet.address} 余额失败:`, error)
-      }
-    }
-    fetchBalance()
     
     // 通知父窗口钱包激活变化
     window.parent.postMessage({
@@ -610,20 +546,22 @@ function PrivyAuth() {
           // 如果以上方法都不可用，尝试使用嵌入式钱包的签名功能
           console.log('尝试使用嵌入式钱包的签名功能...')
           if (walletInfo.type === 'embedded') {
-            // 对于嵌入式钱包，使用ethers.js进行签名
-            console.log('使用嵌入式钱包的ethers签名功能...')
+            // 对于嵌入式钱包，使用Privy SDK进行签名
+            console.log('使用嵌入式钱包的Privy SDK签名功能...')
             const provider = wallet.getEthereumProvider ? await wallet.getEthereumProvider() : null
             if (provider) {
-              const signer = await provider.getSigner()
-              signature = await signer.signMessage(messageToSign)
+              // 使用Privy SDK的签名功能
+              if (wallet.signMessage) {
+                signature = await wallet.signMessage(messageToSign)
+              } else {
+                throw new Error('钱包不支持签名功能')
+              }
             } else {
               // 如果无法获取provider，尝试重新创建钱包
               console.log('重新创建嵌入式钱包进行签名...')
               const newWallet = await createWallet()
-              const newProvider = newWallet.getEthereumProvider ? await newWallet.getEthereumProvider() : null
-              if (newProvider) {
-                const signer = await newProvider.getSigner()
-                signature = await signer.signMessage(messageToSign)
+              if (newWallet && newWallet.signMessage) {
+                signature = await newWallet.signMessage(messageToSign)
               } else {
                 throw new Error('无法获取钱包provider进行签名')
               }
@@ -638,13 +576,11 @@ function PrivyAuth() {
         console.log('尝试备用签名方法...')
         try {
           if (walletInfo.type === 'embedded') {
-            // 对于嵌入式钱包，尝试使用provider进行签名
-            const provider = wallet.getEthereumProvider ? await wallet.getEthereumProvider() : null
-            if (provider) {
-              const signer = await provider.getSigner()
-              signature = await signer.signMessage(messageToSign)
+            // 对于嵌入式钱包，尝试使用Privy SDK进行签名
+            if (wallet.signMessage) {
+              signature = await wallet.signMessage(messageToSign)
             } else {
-              throw new Error('无法获取钱包provider')
+              throw new Error('钱包不支持签名功能')
             }
           } else {
             throw signError
@@ -778,21 +714,10 @@ function PrivyAuth() {
     }
   }, [privyReady, authenticated, user])
 
-  // 定期刷新钱包余额
+  // 不再定期刷新钱包余额（移除后端依赖）
   useEffect(() => {
-    if (allWallets.length === 0) return
-
-    const refreshBalances = async () => {
-      await fetchWalletBalances(allWallets)
-    }
-
-    // 立即刷新一次
-    refreshBalances()
-
-    // 设置定时器每30秒刷新一次
-    const interval = setInterval(refreshBalances, 30000)
-
-    return () => clearInterval(interval)
+    // 钱包余额功能已移除，此useEffect保留用于未来扩展
+    return () => {}
   }, [allWallets])
 
   if (!privyReady) {
@@ -839,7 +764,6 @@ function PrivyAuth() {
                 walletsReady={walletsReady}
                 allWallets={allWallets}
                 activeWallet={activeWallet}
-                walletBalances={walletBalances}
                 onActivateWallet={handleActivateWallet}
               />
               

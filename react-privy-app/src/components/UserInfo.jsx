@@ -22,43 +22,41 @@ const UserInfo = ({ user, walletsReady, wallets, activeWallet }) => {
 
   return (
     <div className="user-info-section">
-      <div className="privy-user-info">
-        <h3>👤 用户信息</h3>
-        <div className="user-info-grid">
-          <div className="info-item">
-            <span className="info-label">用户ID:</span>
-            <span className="info-value">{user.id}</span>
-          </div>
-          <div className="info-item">
-            <span className="info-label">邮箱:</span>
-            <span className="info-value">{user.email?.address || '未设置'}</span>
-          </div>
-          <div className="info-item">
-            <span className="info-label">姓名:</span>
-            <span className="info-value">{getUserName()}</span>
-          </div>
-          <div className="info-item">
-            <span className="info-label">钱包状态:</span>
-            <span className={`info-value status-${walletsReady ? 'ready' : 'loading'}`}>
-              {walletsReady ? '✅ 已加载' : '⏳ 加载中...'}
-            </span>
-          </div>
-          <div className="info-item">
-            <span className="info-label">钱包数量:</span>
-            <span className="info-value">{wallets?.length || 0} 个</span>
-          </div>
-          <div className="info-item">
-            <span className="info-label">激活钱包:</span>
-            <span className="info-value wallet-address">
-              {formatAddress(activeWallet?.address)}
-            </span>
-          </div>
-          <div className="info-item">
-            <span className="info-label">钱包类型:</span>
-            <span className={`info-value wallet-type-${activeWallet?.type}`}>
-              {activeWallet?.type ? getWalletTypeText(activeWallet.type) : '未选择'}
-            </span>
-          </div>
+      <h3>👤 用户信息</h3>
+      <div className="user-info-grid">
+        <div className="info-item">
+          <span className="info-label">用户ID:</span>
+          <span className="info-value">{user.id}</span>
+        </div>
+        <div className="info-item">
+          <span className="info-label">邮箱:</span>
+          <span className="info-value">{user.email?.address || '未设置'}</span>
+        </div>
+        <div className="info-item">
+          <span className="info-label">姓名:</span>
+          <span className="info-value">{getUserName()}</span>
+        </div>
+        <div className="info-item">
+          <span className="info-label">钱包状态:</span>
+          <span className={`info-value status-${walletsReady ? 'ready' : 'loading'}`}>
+            {walletsReady ? '✅ 已加载' : '⏳ 加载中...'}
+          </span>
+        </div>
+        <div className="info-item">
+          <span className="info-label">钱包数量:</span>
+          <span className="info-value">{wallets?.length || 0} 个</span>
+        </div>
+        <div className="info-item">
+          <span className="info-label">激活钱包:</span>
+          <span className="info-value wallet-address">
+            {formatAddress(activeWallet?.address)}
+          </span>
+        </div>
+        <div className="info-item">
+          <span className="info-label">钱包类型:</span>
+          <span className={`info-value wallet-type-${activeWallet?.type}`}>
+            {activeWallet?.type ? getWalletTypeText(activeWallet.type) : '未选择'}
+          </span>
         </div>
       </div>
     </div>

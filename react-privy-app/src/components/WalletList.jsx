@@ -5,7 +5,7 @@ import WalletCard from './WalletCard'
  * 钱包列表组件
  * 显示用户所有钱包的卡片列表
  */
-const WalletList = ({ wallets, activeWallet, onActivateWallet, onCopyAddress, walletBalances }) => {
+const WalletList = ({ wallets, activeWallet, onActivateWallet, onCopyAddress }) => {
   if (!wallets || wallets.length === 0) {
     return null
   }
@@ -29,7 +29,7 @@ const WalletList = ({ wallets, activeWallet, onActivateWallet, onCopyAddress, wa
             key={index}
             wallet={{
               ...wallet,
-              balance: walletBalances[wallet.address] || '⏳ 加载中...'
+              balance: '0.00' // 默认余额为0.00，不再从后端获取
             }}
             isActive={activeWallet?.address === wallet.address}
             onActivate={onActivateWallet}
