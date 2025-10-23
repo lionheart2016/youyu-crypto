@@ -1,5 +1,5 @@
-# 使用官方Nginx镜像
-FROM nginx:alpine
+# 使用官方Nginx镜像 - 指定amd64架构
+FROM --platform=linux/amd64 10.9.68.150:80/library/nginx:latest
 
 # 复制自定义nginx配置
 COPY nginx.conf /etc/nginx/nginx.conf

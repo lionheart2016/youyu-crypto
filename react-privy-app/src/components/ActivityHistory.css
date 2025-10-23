@@ -1,0 +1,412 @@
+/* ActivityHistory Component Styles */
+.activity-history {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.history-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.transaction-count {
+  font-size: 0.875rem;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.filter-btn {
+  padding: 6px 12px;
+  border: 1px solid #d1d5db;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.filter-btn:hover {
+  background: #f3f4f6;
+}
+
+.filter-btn.active {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.refresh-btn {
+  padding: 6px 10px;
+  border: 1px solid #d1d5db;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.refresh-btn:hover {
+  background: #f3f4f6;
+}
+
+.refresh-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.loading-state,
+.error-state,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.error-state button {
+  margin-top: 12px;
+  padding: 8px 16px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.error-state button:hover {
+  background: #2563eb;
+}
+
+/* 表格容器 */
+.transactions-table-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+/* 表头样式 */
+.transactions-table-header {
+  display: flex;
+  background: #f9fafb;
+  border-bottom: 2px solid #e5e7eb;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #374151;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.sortable-header {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  color: #374151;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sortable-header:hover {
+  color: #3b82f6;
+}
+
+/* 交易列表 */
+.transactions-list {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* 交易项（表格行） */
+.transaction-item {
+  display: flex;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background-color 0.2s;
+}
+
+.transaction-item:hover {
+  background: #fafafa;
+}
+
+.transaction-item:last-child {
+  border-bottom: none;
+}
+
+/* 表格单元格 */
+.table-cell {
+  padding: 12px 8px;
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+  word-break: break-all;
+}
+
+/* 各列宽度 */
+.hash-col {
+  flex: 0 0 140px;
+  min-width: 140px;
+}
+
+.method-col {
+  flex: 0 0 80px;
+  min-width: 80px;
+}
+
+.block-col {
+  flex: 0 0 80px;
+  min-width: 80px;
+}
+
+.age-col {
+  flex: 0 0 100px;
+  min-width: 100px;
+}
+
+.from-col,
+.to-col {
+  flex: 1;
+  min-width: 140px;
+}
+
+.amount-col {
+  flex: 0 0 120px;
+  min-width: 120px;
+  justify-content: flex-end;
+  font-weight: 500;
+}
+
+.fee-col {
+  flex: 0 0 100px;
+  min-width: 100px;
+  justify-content: flex-end;
+}
+
+/* 链接样式 */
+.hash-link,
+.block-link,
+.address-link {
+  color: #3b82f6;
+  text-decoration: none;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 0.8125rem;
+  transition: color 0.2s;
+}
+
+.hash-link:hover,
+.block-link:hover,
+.address-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+/* 方法标签 */
+.method-badge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.method-badge.transfer {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.method-badge.execute {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* 地址容器 */
+.address-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+/* 方向指示器 */
+.direction-indicator {
+  font-size: 0.6875rem;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.direction-indicator.out {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.direction-indicator.in {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+/* 金额样式 */
+.amount-value {
+  font-weight: 600;
+}
+
+.amount-value.sent {
+  color: #b91c1c;
+}
+
+.amount-value.received {
+  color: #065f46;
+}
+
+.amount-value.error {
+  color: #7f1d1d;
+  font-style: italic;
+}
+
+/* 交易费样式 */
+.fee-value {
+  color: #6b7280;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+}
+
+/* 表格页脚 */
+.table-footer {
+  padding: 12px;
+  text-align: right;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+  .table-cell {
+    padding: 8px 6px;
+    font-size: 0.75rem;
+  }
+  
+  .hash-col {
+    flex: 0 0 120px;
+    min-width: 120px;
+  }
+  
+  .amount-col {
+    flex: 0 0 100px;
+    min-width: 100px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .method-col,
+  .block-col {
+    flex: 0 0 60px;
+    min-width: 60px;
+  }
+  
+  .fee-col {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .activity-history {
+    padding: 16px;
+  }
+  
+  .history-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .header-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  /* 在移动端简化表格显示 */
+  .transactions-table-container {
+    border: none;
+  }
+  
+  .transactions-table-header {
+    display: none;
+  }
+  
+  .transaction-item {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 12px;
+  }
+  
+  .table-cell {
+    width: 100%;
+    padding: 4px 0;
+    flex: none;
+  }
+  
+  .amount-col {
+    justify-content: flex-start;
+    font-size: 1rem;
+    padding-top: 8px;
+  }
+  
+  .fee-col {
+    display: flex;
+    justify-content: flex-start;
+  }
+}
+
+.no-wallet-message {
+  text-align: center;
+  padding: 40px 20px;
+  color: #64748b;
+}

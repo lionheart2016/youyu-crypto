@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react'
 import { PrivyProvider, usePrivy, useCreateWallet, useWallets, useConnectWallet } from '@privy-io/react-auth'
 import TransactionSender from './components/TransactionSender'
 import UserInfo from './components/UserInfo'
-import WalletList from './components/WalletList'
+import WalletListView from './components/WalletListView'
 import WalletOperations from './components/WalletOperations'
 import WalletActions from './components/WalletActions'
 import LogoutButton from './components/LogoutButton'
+import AssetOverview from './components/AssetOverview'
+import ActivityHistory from './components/ActivityHistory'
 
 // 为浏览器环境添加Buffer支持
 import { Buffer } from 'buffer'
@@ -67,22 +69,10 @@ function PrivyAuth() {
   const { connectWallet } = useConnectWallet({
     onSuccess: ({wallet}) => {
       console.log('外部钱包连接成功:', wallet)
-      // 通知父窗口外部钱包连接成功
-      window.parent.postMessage({
-        type: 'EXTERNAL_WALLET_CONNECTED',
-        wallet: {
-          address: wallet.address,
-          chain: wallet.chain,
-          type: wallet.walletClientType
-        }
-      }, '*')
     },
     onError: (error) => {
       console.error('外部钱包连接失败:', error)
-      window.parent.postMessage({
-        type: 'PRIVY_ERROR',
-        error: `连接外部钱包失败: ${error.message || error}`
-      }, '*')
+
     }
   })
   const [walletInfo, setWalletInfo] = useState(null)
@@ -759,12 +749,16 @@ function PrivyAuth() {
                 activeWallet={activeWallet}
               />
               
-              {/* 钱包卡片展示区域 */}
-              <WalletList 
-                walletsReady={walletsReady}
-                allWallets={allWallets}
+              {/* 钱包列表展示区域 */}
+              <WalletListView 
+                wallets={allWallets}
                 activeWallet={activeWallet}
                 onActivateWallet={handleActivateWallet}
+                onCopyAddress={(address) => {
+                  navigator.clipboard.writeText(address)
+                    .then(() => alert('地址已复制到剪贴板'))
+                    .catch(() => alert('复制失败'))
+                }}
               />
               
               {/* 钱包操作区域 */}
@@ -789,6 +783,22 @@ function PrivyAuth() {
                   isSigning={isSigning}
                   signResult={signResult}
                   onSignMessage={() => handleSignMessage('Hello, Privy!')}
+                />
+              )}
+              
+              {/* 资产概览 - 只有在有钱包地址时显示 */}
+              {activeWallet?.address && (
+                <AssetOverview 
+                  walletAddress={activeWallet.address}
+                  network="sepolia"
+                />
+              )}
+              
+              {/* 活动记录 - 只有在有钱包地址时显示 */}
+              {activeWallet?.address && (
+                <ActivityHistory 
+                  walletAddress={activeWallet.address}
+                  network="sepolia"
                 />
               )}
               

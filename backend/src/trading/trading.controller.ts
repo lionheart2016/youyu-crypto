@@ -199,6 +199,16 @@ export class TradingController {
     return this.ethereumService.getGasEstimation(to, value, data);
   }
 
+  @Get('ethereum/transaction-history/:address')
+  @ApiOperation({ summary: '获取以太坊地址交易历史' })
+  @ApiResponse({ status: 200, description: '返回交易历史数据' })
+  async getTransactionHistory(
+    @Param('address') address: string,
+    @Query('network') network: string = 'sepolia'
+  ): Promise<any> {
+    return this.ethereumDataService.getTransactionHistory(address, network);
+  }
+
   @Get('ethereum/block-number')
   @ApiOperation({ summary: '获取当前区块号' })
   @ApiResponse({ status: 200, description: '返回当前区块号' })
