@@ -734,15 +734,15 @@ function PrivyAuth() {
   }
 
   return (
-        <div className="privy-container">
+        <div className="app-root">
           <div className="privy-header">
             <h1>🔐 钱包认证</h1>
             <p>使用Privy进行真实钱包认证</p>
           </div>
     
           {authenticated && (
-            <div className="authenticated-content">
-              <UserInfo 
+              <div className="main-content">
+                <UserInfo 
                 user={user}
                 walletsReady={walletsReady}
                 wallets={wallets}
@@ -803,7 +803,7 @@ function PrivyAuth() {
               )}
               
               <LogoutButton onLogout={handleLogout} />
-            </div>
+              </div>
           )}
         </div>
       )

@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: wallets-demo
-        image: 10.9.68.150:80/web3/wallets-demo:latest
+        image: 10.9.68.150:80/web3/wallets-demo:v0.4
         ports:
         - containerPort: 80
         resources:

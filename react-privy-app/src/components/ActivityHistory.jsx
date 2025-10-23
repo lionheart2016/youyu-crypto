@@ -259,10 +259,7 @@ const ActivityHistory = ({ walletAddress, activeNetwork = 'sepolia' }) => {
   // 初始化数据
   useEffect(() => {
     refreshHistory();
-    
-    // 设置定时刷新（每60秒）
-    const interval = setInterval(refreshHistory, 60000);
-    return () => clearInterval(interval);
+    // 移除定时刷新，仅在初始化和点击刷新按钮时加载数据
   }, [walletAddress, activeNetwork]);
 
   // 过滤和排序交易

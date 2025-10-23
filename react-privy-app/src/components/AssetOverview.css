@@ -34,19 +34,158 @@
   cursor: not-allowed;
 }
 
-.asset-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+.asset-cards-container {
+  display: flex;
   gap: 16px;
+  justify-content: space-between;
+  margin-bottom: 24px;
 }
 
-.asset-card {
-  background: white;
-  border-radius: 8px;
-  padding: 16px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .asset-cards-container {
+    flex-direction: column;
+  }
 }
+
+/* 卡片通用样式 */
+.asset-card {
+  flex: 1;
+  min-width: 0; /* 防止flex子元素溢出 */
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.asset-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 代币部分样式 */
+.tokens-section {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.section-header h4 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.token-count {
+  font-size: 14px;
+  color: #718096;
+}
+
+.tokens-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.token-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f7fafc;
+}
+
+.token-item:last-child {
+  border-bottom: none;
+}
+
+.token-info {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.token-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  margin-right: 12px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.token-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.token-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a202c;
+  line-height: 1.2;
+}
+
+.token-symbol {
+  font-size: 12px;
+  color: #718096;
+  line-height: 1.2;
+}
+
+.token-balance {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a202c;
+  margin: 0 16px;
+  text-align: right;
+}
+
+.token-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #38a169;
+  text-align: right;
+  min-width: 80px;
+}
+
+/* 无代币提示信息样式 */
+.no-tokens-message {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 24px;
+  margin: 16px 0;
+  text-align: center;
+  border: 1px dashed #cbd5e1;
+}
+
+.no-tokens-message p {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  color: #64748b;
+}
+
+.no-tokens-message small {
+  color: #94a3b8;
+  font-size: 14px;
+}
+
 
 .card-header {
   display: flex;
