@@ -6,7 +6,7 @@ set -e
 # 配置变量
 APP_NAME="wallets-demo"
 REPO="10.9.68.150:80/web3/$APP_NAME"
-K8S_NAMESPACE="zero-web"
+K8S_NAMESPACE="zero-va-dev"
 # 使用明确的绝对路径
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 K8S_CONFIG="$SCRIPT_DIR/k8s/kubeconfig.yaml"
@@ -94,23 +94,13 @@ push_docker() {
 # 步骤4: 更新K8s部署
 update_k8s() {
     blue "\n=== 步骤4: 更新K8s部署 ==="
-    
-    # 检查文件是否存在 - 使用绝对路径
-    if [ ! -f "$K8S_DEPLOYMENT" ]; then
-        red "错误: 找不到部署文件 $K8S_DEPLOYMENT"
+
+    # 直接使用APP_NAME作为容器名，更新镜像
+    yellow "更新K8s部署镜像..."
+    kubectl --kubeconfig="$K8S_CONFIG" set image deployment "$APP_NAME" -n "$K8S_NAMESPACE" "$APP_NAME=$IMAGE_FULL" || {
+        red "更新K8s部署镜像失败"
         return 1
-    fi
-    
-    # 备份原始配置
-    cp "$K8S_DEPLOYMENT" "$K8S_DEPLOYMENT.bak"
-    
-    # 更新镜像标签
-    yellow "更新K8s配置文件中的镜像标签..."
-    sed -i.bak "s|image: $REPO:.*|image: $IMAGE_FULL|g" "$K8S_DEPLOYMENT"
-    rm -f "$K8S_DEPLOYMENT.bak"
-    
-    yellow "应用K8s配置..."
-    kubectl --kubeconfig="$K8S_CONFIG" apply -f "$K8S_DEPLOYMENT"
+    }
     
     green "K8s配置更新完成!"
 }

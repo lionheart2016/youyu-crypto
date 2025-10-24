@@ -1,0 +1,595 @@
+/* TokenSwapCard.css - 代币交换卡片样式 */
+
+/* 搜索相关样式 */
+.search-loading {
+  color: #888;
+  text-align: center;
+  padding: 20px;
+  font-size: 14px;
+}
+
+.no-results {
+  color: #ff4757;
+  text-align: center;
+  padding: 20px;
+  font-size: 14px;
+}
+
+/* 默认代币图标样式 */
+.default-token-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.default-token-icon.unknown {
+  background-color: #555;
+}
+
+/* 代币图标容器 */
+.token-icon-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+/* 代币地址简写 */
+.token-address-short {
+  font-size: 11px;
+  color: #888;
+  margin-left: 4px;
+}
+
+/* 搜索输入框包装器 */
+.search-input-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+/* 网络选择器按钮 */
+.network-selector-btn {
+  position: absolute;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 6px 10px;
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.network-selector-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* 网络图标 */
+.network-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+/* 上下箭头 */
+.chevron-up-down {
+  font-size: 8px;
+  color: #aaa;
+}
+
+/* 网络下拉框 */
+.network-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* 网络项 */
+.network-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  position: relative;
+}
+
+.network-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.network-item.active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* 网络名称 */
+.network-name {
+  flex: 1;
+  color: white;
+  font-size: 14px;
+}
+
+/* 网络新标记 */
+.network-badge {
+  font-size: 11px;
+  padding: 2px 6px;
+  background: #ff0080;
+  color: white;
+  border-radius: 10px;
+}
+
+/* 网络选择勾选 */
+.network-check {
+  color: #4caf50;
+  font-weight: bold;
+}
+
+/* 深色主题样式 */
+.token-swap-card-dark {
+  background-color: #191c28;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  color: #ffffff;
+}
+
+/* 选项卡容器 */
+.tabs-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 16px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.tab-btn.active {
+  background-color: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+}
+
+.settings-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.settings-btn:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* 交易设置面板 */
+.settings-panel-dark {
+  background-color: #262a38;
+  border: 1px solid #3a3f52;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.setting-item label {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.setting-select {
+  background-color: #191c28;
+  border: 1px solid #3a3f52;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+}
+
+.setting-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+/* 交换表单 */
+.swap-form-dark {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 代币输入容器 */
+.token-input-container-dark {
+  background-color: #262a38;
+  border: 1px solid #3a3f52;
+  border-radius: 8px;
+  padding: 16px;
+  position: relative;
+}
+
+.input-header {
+  margin-bottom: 8px;
+}
+
+.input-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.amount-input-dark {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 600;
+  width: 100%;
+  padding: 8px 0;
+  outline: none;
+}
+
+.usd-value {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 8px;
+}
+
+.token-selector-dark {
+  background-color: #191c28;
+  border: 1px solid #3a3f52;
+  border-radius: 6px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: absolute;
+  right: 16px;
+  top: 16px;
+}
+
+.token-selector-dark:hover {
+  background-color: #3a3f52;
+}
+
+.select-token-btn {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+  top: auto;
+  bottom: 16px;
+}
+
+.token-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+}
+
+.token-symbol-dark {
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.chevron-dark {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.balance-info-dark {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 36px;
+}
+
+/* 交换方向按钮 */
+.swap-direction-btn-dark {
+  background-color: #3b82f6;
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  margin: 0 auto;
+  transition: all 0.3s ease;
+}
+
+.swap-direction-btn-dark:hover {
+  background-color: #2563eb;
+}
+
+.swap-direction-btn-dark:disabled {
+  background-color: #3a3f52;
+  cursor: not-allowed;
+}
+
+/* 快速选择代币区域 */
+.quick-select-tokens {
+  display: flex;
+  gap: 8px;
+  margin-top: 40px;
+  margin-bottom: 8px;
+}
+
+.quick-token-btn {
+  background: transparent;
+  border: 1px solid #3a3f52;
+  border-radius: 6px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quick-token-btn:hover {
+  background-color: rgba(59, 130, 246, 0.15);
+  border-color: #3b82f6;
+}
+
+.quick-token-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+}
+
+/* 交换按钮 */
+.swap-btn-dark {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 16px;
+  font-size: 24px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s ease;
+}
+
+.swap-btn-dark:hover:not(:disabled) {
+  background-color: #2563eb;
+}
+
+.swap-btn-dark:disabled {
+  background-color: #3a3f52;
+  cursor: not-allowed;
+}
+
+/* 交易状态反馈 */
+.swap-status-dark {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.swap-status-dark.pending {
+  background-color: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+}
+
+.swap-status-dark.success {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.swap-status-dark.error {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.tx-hash-link {
+  color: #3b82f6;
+  text-decoration: none;
+  margin-left: 8px;
+}
+
+.tx-hash-link:hover {
+  text-decoration: underline;
+}
+
+/* 代币选择器模态框 - 深色主题 */
+.token-selector-modal-dark {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-overlay-dark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.modal-content-dark {
+  background-color: #191c28;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 1001;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header-dark {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #3a3f52;
+}
+
+.modal-header-dark h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.close-btn-dark {
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.close-btn-dark:hover {
+  color: #ffffff;
+}
+
+.search-container-dark {
+  padding: 16px 20px;
+  border-bottom: 1px solid #3a3f52;
+}
+
+.search-input-dark {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #3a3f52;
+  border-radius: 8px;
+  font-size: 16px;
+  background-color: #262a38;
+  color: #ffffff;
+}
+
+.search-input-dark:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.search-input-dark::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.token-list-dark {
+  overflow-y: auto;
+  max-height: 50vh;
+}
+
+.token-item-dark {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #3a3f52;
+  transition: background-color 0.2s ease;
+}
+
+.token-item-dark:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.token-info-dark {
+  display: flex;
+  flex-direction: column;
+}
+
+.token-symbol-dark {
+  font-weight: 600;
+  color: #ffffff;
+  font-size: 16px;
+}
+
+.token-name-dark {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* 响应式设计 */
+@media (max-width: 640px) {
+  .token-swap-card-dark {
+    padding: 16px;
+    max-width: 100%;
+  }
+  
+  .amount-input-dark {
+    font-size: 20px;
+  }
+  
+  .swap-btn-dark {
+    font-size: 20px;
+    padding: 12px;
+  }
+  
+  .modal-content-dark {
+    width: 100%;
+    max-height: 90vh;
+  }
+}

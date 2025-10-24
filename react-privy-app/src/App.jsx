@@ -8,6 +8,7 @@ import WalletActions from './components/WalletActions'
 import LogoutButton from './components/LogoutButton'
 import AssetOverview from './components/AssetOverview'
 import ActivityHistory from './components/ActivityHistory'
+import TokenSwapCard from './components/TokenSwapCard'
 
 // 为浏览器环境添加Buffer支持
 import { Buffer } from 'buffer'
@@ -797,6 +798,14 @@ function PrivyAuth() {
               {/* 活动记录 - 只有在有钱包地址时显示 */}
               {activeWallet?.address && (
                 <ActivityHistory 
+                  walletAddress={activeWallet.address}
+                  network="sepolia"
+                />
+              )}
+              
+              {/* 代币交换功能 - 只有在有钱包地址时显示 */}
+              {activeWallet?.address && (
+                <TokenSwapCard 
                   walletAddress={activeWallet.address}
                   network="sepolia"
                 />
