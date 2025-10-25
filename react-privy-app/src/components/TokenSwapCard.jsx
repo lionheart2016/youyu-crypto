@@ -1,67 +1,22 @@
+/**
+ * TokenSwapCard 组件
+ * 提供代币交换功能，包括代币选择、金额输入、汇率显示和交换执行
+ * 
+ * @param {Object} props - 组件属性
+ * @param {string} props.walletAddress - 钱包地址
+ * @param {string} props.activeNetwork - 当前活跃的网络，默认为'sepolia'
+ */
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import './TokenSwapCard.css';
+import TokenSearch from './TokenSearch';
+import { NETWORKS, COMMON_TOKENS, QUICK_SELECT_TOKENS } from './constants';
 
-
-
-// 网络配置 - 与AssetOverview组件保持一致
-const NETWORKS = {
-  sepolia: {
-    name: 'Sepolia Testnet',
-    chainId: 11155111,
-    rpcUrl: 'https://ethereum-sepolia-rpc.publicnode.com',
-    explorer: 'https://sepolia.etherscan.io',
-    blockscoutApi: 'https://eth-sepolia.blockscout.com',
-    icon: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png?1696501628',
-    color: '#627EEA'
-  },
-  mainnet: {
-    name: 'Ethereum Mainnet',
-    chainId: 1,
-    rpcUrl: 'https://ethereum-rpc.publicnode.com',
-    explorer: 'https://etherscan.io',
-    blockscoutApi: 'https://eth.blockscout.com',
-    icon: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png?1696501628',
-    color: '#627EEA'
-  },
-  unichain: {
-    name: 'Unichain Sepolia',
-    chainId: 11155420,
-    rpcUrl: 'https://unichain-sepolia-rpc.publicnode.com',
-    explorer: 'https://unichain-sepolia.blockscout.com',
-    blockscoutApi: 'https://unichain-sepolia.blockscout.com',
-    icon: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png?1696501628',
-    color: '#FF0080'
-  },
-  monad: {
-    name: 'Monad Testnet',
-    chainId: 11155432,
-    rpcUrl: 'https://monad-testnet-rpc.publicnode.com',
-    explorer: 'https://monad-testnet.blockscout.com',
-    blockscoutApi: 'https://monad-testnet.blockscout.com',
-    icon: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png?1696501628',
-    color: '#8B5CF6'
-  }
-};
-
-// 常用代币列表 - 实际应用中可以从API获取
-const COMMON_TOKENS = [
-  { symbol: 'ETH', name: 'Ethereum', decimals: 18, icon: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png?1696501628' },
-  { symbol: 'USDC', name: 'USD Coin', decimals: 6, icon: 'https://assets.coingecko.com/coins/images/6319/large/USD_Coin_icon.png?1668147255' },
-  { symbol: 'USDT', name: 'Tether', decimals: 6, icon: 'https://assets.coingecko.com/coins/images/325/large/Tether.png?1696501661' },
-  { symbol: 'DAI', name: 'DAI Stablecoin', decimals: 18, icon: 'https://assets.coingecko.com/coins/images/9956/large/4943.png?1636636734' },
-  { symbol: 'UNI', name: 'Uniswap', decimals: 18, icon: 'https://assets.coingecko.com/coins/images/12504/large/uniswap-uni.png?1608232835' },
-];
-
-// 快速选择代币列表
-const QUICK_SELECT_TOKENS = [
-  { symbol: 'ETH', name: 'Ethereum', icon: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png?1696501628' },
-  { symbol: 'USDC', name: 'USD Coin', icon: 'https://assets.coingecko.com/coins/images/6319/large/USD_Coin_icon.png?1668147255' },
-  { symbol: 'USDT', name: 'Tether', icon: 'https://assets.coingecko.com/coins/images/325/large/Tether.png?1696501661' },
-  { symbol: 'UNI', name: 'Uniswap', icon: 'https://assets.coingecko.com/coins/images/12504/large/uniswap-uni.png?1608232835' },
-];
-
-// 获取代币价格数据
+/**
+ * 获取代币价格数据
+ * @param {string} symbol - 代币符号
+ * @returns {Promise<number>} 代币价格（USD）
+ */
 const getTokenPrice = async (symbol) => {
   try {
     // 注意：实际应用中应该使用更可靠的价格API
@@ -97,29 +52,39 @@ const TokenSwapCard = ({ walletAddress, activeNetwork = 'sepolia' }) => {
   const [swapStatus, setSwapStatus] = useState('idle'); // idle, pending, success, error
   const [swapError, setSwapError] = useState('');
   const [swapHash, setSwapHash] = useState('');
-  // 代币搜索相关状态
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
-  // 网络选择相关状态
-  const [searchNetwork, setSearchNetwork] = useState(activeNetwork);
-  const [showNetworkSelector, setShowNetworkSelector] = useState(false);
+  // 代币搜索相关状态 - 已移至TokenSearch组件
 
-  // 初始化时获取钱包余额
+  /**
+   * 处理网络切换
+   * @param {string} networkKey - 网络键名
+   */
+  const handleNetworkChange = (networkKey) => {
+    // 网络切换逻辑 - 可以在这里添加额外的网络切换处理
+    console.log('切换到网络:', networkKey);
+    // 注意：由于activeNetwork是prop，实际的网络切换应该在父组件中处理
+  };
+
+  /**
+   * 初始化时获取钱包余额
+   */
   useEffect(() => {
     if (walletAddress) {
       fetchWalletBalance();
     }
   }, [walletAddress, activeNetwork]);
 
-  // 当代币或金额变化时，更新预估金额
+  /**
+   * 当代币或金额变化时，更新预估金额
+   */
   useEffect(() => {
     if (fromAmount && !isNaN(fromAmount)) {
       updateEstimatedAmount();
     }
   }, [fromAmount, fromToken, toToken]);
 
-  // 获取钱包ETH余额
+  /**
+   * 获取钱包ETH余额
+   */
   const fetchWalletBalance = async () => {
     try {
       const provider = new ethers.JsonRpcProvider(NETWORKS[activeNetwork].rpcUrl);
@@ -130,7 +95,9 @@ const TokenSwapCard = ({ walletAddress, activeNetwork = 'sepolia' }) => {
     }
   };
 
-  // 更新预估兑换金额
+  /**
+   * 更新预估兑换金额
+   */
   const updateEstimatedAmount = async () => {
     try {
       // 获取代币价格
@@ -157,7 +124,9 @@ const TokenSwapCard = ({ walletAddress, activeNetwork = 'sepolia' }) => {
     }
   };
 
-  // 切换代币
+  /**
+   * 切换代币
+   */
   const handleSwapTokens = () => {
     const temp = fromToken;
     setFromToken(toToken);
@@ -166,7 +135,24 @@ const TokenSwapCard = ({ walletAddress, activeNetwork = 'sepolia' }) => {
     setToAmount(fromAmount);
   };
 
-  // 根据字符串生成一致的颜色
+  /**
+   * 选择代币
+   * @param {Object} token - 选中的代币对象
+   */
+  const selectToken = (token) => {
+    if (showTokenSelector === 'from') {
+      setFromToken(token);
+    } else if (showTokenSelector === 'to') {
+      setToToken(token);
+    }
+    setShowTokenSelector(null); // 关闭选择器
+  };
+
+  /**
+   * 根据字符串生成一致的颜色
+   * @param {string} str - 输入字符串
+   * @returns {string} 生成的颜色值
+   */
   const stringToColor = (str) => {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
@@ -176,7 +162,23 @@ const TokenSwapCard = ({ walletAddress, activeNetwork = 'sepolia' }) => {
     return color;
   };
 
-  // 生成默认代币图标组件
+  /**
+   * 格式化地址显示
+   * @param {string} address - 钱包地址
+   * @returns {string} 格式化后的地址
+   */
+  const formatAddress = (address) => {
+    if (!address || address === '0x0000000000000000000000000000000000000000') {
+      return '';
+    }
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  /**
+   * 生成默认代币图标组件
+   * @param {string} symbol - 代币符号
+   * @returns {JSX.Element} 图标组件
+   */
   const getDefaultTokenIcon = (symbol) => {
     const initials = symbol.slice(0, 3).toUpperCase();
     const bgColor = stringToColor(symbol);
@@ -190,80 +192,9 @@ const TokenSwapCard = ({ walletAddress, activeNetwork = 'sepolia' }) => {
     );
   };
 
-  // 从Blockscout API搜索代币
-  const searchTokensFromAPI = async (query) => {
-    if (!query.trim()) {
-      setSearchResults([]);
-      return;
-    }
-
-    setIsSearching(true);
-    try {
-      const apiUrl = `${NETWORKS[searchNetwork].blockscoutApi}/api/v2/tokens`;
-      const params = new URLSearchParams({
-        q: query.trim(),
-        limit: 20
-      });
-      
-      const response = await fetch(`${apiUrl}?${params}`);
-      if (!response.ok) {
-        throw new Error('API请求失败');
-      }
-      
-      const data = await response.json();
-      
-      // 格式化搜索结果为我们需要的格式
-      const formattedResults = data.items.map(token => ({
-        symbol: token.symbol || 'Unknown',
-        name: token.name || token.symbol || 'Unknown Token',
-        decimals: parseInt(token.decimals) || 18,
-        contractAddress: token.address,
-        network: searchNetwork
-      }));
-      
-      setSearchResults(formattedResults);
-    } catch (error) {
-      console.error('搜索代币失败:', error);
-      setSearchResults([]);
-    } finally {
-      setIsSearching(false);
-    }
-  };
-  
-  // 切换搜索网络
-  const handleNetworkChange = (networkKey) => {
-    setSearchNetwork(networkKey);
-    setShowNetworkSelector(false);
-    // 如果有搜索内容，重新搜索
-    if (searchQuery.trim()) {
-      searchTokensFromAPI(searchQuery);
-    }
-  };
-
-  // 处理搜索输入变化
-  const handleSearchChange = (e) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-    searchTokensFromAPI(query);
-  };
-
-  // 选择代币
-  const selectToken = (token) => {
-    if (showTokenSelector === 'from') {
-      setFromToken(token);
-      // 如果选择的是ETH，重置余额
-      if (token.symbol === 'ETH' && walletAddress) {
-        fetchWalletBalance();
-      }
-    } else {
-      setToToken(token);
-    }
-    setShowTokenSelector(null);
-    setSearchQuery('');
-    setSearchResults([]);
-  };
-
-  // 处理兑换
+  /**
+   * 处理兑换
+   */
   const handleSwap = async () => {
     if (!walletAddress) {
       setSwapError('请先连接钱包');
@@ -307,13 +238,19 @@ const TokenSwapCard = ({ walletAddress, activeNetwork = 'sepolia' }) => {
     }
   };
 
-  // 设置滑点容忍度
+  /**
+   * 设置滑点容忍度
+   * @param {number} value - 滑点容忍度值
+   */
   const setSlippage = (value) => {
     setSettings(prev => ({ ...prev, slippage: value }));
     if (fromAmount) updateEstimatedAmount();
   };
 
-  // 设置交易截止时间
+  /**
+   * 设置交易截止时间
+   * @param {number} value - 截止时间（分钟）
+   */
   const setDeadline = (value) => {
     setSettings(prev => ({ ...prev, deadline: value }));
   };
@@ -401,8 +338,16 @@ const TokenSwapCard = ({ walletAddress, activeNetwork = 'sepolia' }) => {
             placeholder="0" 
             value={fromAmount} 
             onChange={(e) => setFromAmount(e.target.value)}
-            className="amount-input-dark"
+            className="amount-input-dark no-autofill"
             disabled={isLoading}
+            autocomplete="off"
+            autocorrect="off"
+            name="token-amount-input"
+            id="token-amount-input-send"
+            formNoValidate
+            data-lpignore="true"
+            inputMode="decimal"
+            autoComplete="off"
           />
           
           {/* 美元价值显示 */}
@@ -417,7 +362,7 @@ const TokenSwapCard = ({ walletAddress, activeNetwork = 'sepolia' }) => {
             onClick={() => setShowTokenSelector('from')}
             disabled={isLoading}
           >
-            <img src={fromToken.icon} alt={fromToken.name} className="token-icon" />
+            {/* <img src={fromToken.icon} alt={fromToken.name} className="token-icon" /> */}
             <span className="token-symbol-dark">{fromToken.symbol}</span>
             <span className="chevron-dark">▼</span>
           </button>
@@ -448,8 +393,13 @@ const TokenSwapCard = ({ walletAddress, activeNetwork = 'sepolia' }) => {
             placeholder="0" 
             value={toAmount} 
             onChange={(e) => setToAmount(e.target.value)}
-            className="amount-input-dark"
+            className="amount-input-dark no-autofill"
             readOnly
+            name="token-amount-input-receive"
+            id="token-amount-input-receive"
+            formNoValidate
+            data-lpignore="true"
+            inputMode="decimal"
           />
           
           {/* 美元价值显示 */}
@@ -482,7 +432,7 @@ const TokenSwapCard = ({ walletAddress, activeNetwork = 'sepolia' }) => {
             className="token-selector-dark select-token-btn"
             onClick={() => setShowTokenSelector('to')}
           >
-            <img src={toToken.icon} alt={toToken.name} className="token-icon" />
+            {/* <img src={toToken.icon} alt={toToken.name} className="token-icon" /> */}
             <span className="token-symbol-dark">{toToken.symbol}</span>
             <span className="chevron-dark">▼</span>
           </button>
@@ -498,148 +448,14 @@ const TokenSwapCard = ({ walletAddress, activeNetwork = 'sepolia' }) => {
         </button>
       </div>
       
-      {/* 交易状态反馈 */}
-      {swapStatus !== 'idle' && (
-        <div className={`swap-status-dark ${swapStatus}`}>
-          {swapStatus === 'pending' && <p>交易处理中...</p>}
-          {swapStatus === 'success' && (
-            <p>
-              交易成功! 
-              <a 
-                href={`${NETWORKS[activeNetwork].explorer}/tx/${swapHash}`} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="tx-hash-link"
-              >
-                查看交易
-              </a>
-            </p>
-          )}
-          {swapStatus === 'error' && <p>{swapError}</p>}
-        </div>
-      )}
-      
-      {/* 代币选择器模态框 */}
-      {showTokenSelector && (
-        <div className="token-selector-modal-dark">
-          <div className="modal-overlay-dark" onClick={() => setShowTokenSelector(null)}></div>
-          <div className="modal-content-dark">
-            <div className="modal-header-dark">
-              <h3>{showTokenSelector === 'from' ? '选择发送代币' : '选择接收代币'}</h3>
-              <button 
-                className="close-btn-dark" 
-                onClick={() => setShowTokenSelector(null)}
-                aria-label="关闭"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="search-container-dark">
-              <div className="search-input-wrapper">
-                <input 
-                  type="text" 
-                  placeholder="搜索代币..." 
-                  className="search-input-dark"
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                />
-                <button 
-                  className="network-selector-btn"
-                  onClick={() => setShowNetworkSelector(!showNetworkSelector)}
-                >
-                  <img 
-                    src={NETWORKS[searchNetwork].icon} 
-                    alt={NETWORKS[searchNetwork].name} 
-                    className="network-icon"
-                  />
-                  {NETWORKS[searchNetwork].name === 'Ethereum Mainnet' ? 'ETH' : 
-                   NETWORKS[searchNetwork].name === 'Sepolia Testnet' ? 'Sepolia' : 
-                   NETWORKS[searchNetwork].name}
-                  <span className="chevron-up-down">{showNetworkSelector ? '▲' : '▼'}</span>
-                </button>
-              </div>
-              
-              {/* 网络选择下拉框 */}
-              {showNetworkSelector && (
-                <div className="network-dropdown">
-                  {Object.entries(NETWORKS).map(([key, network]) => (
-                    <div 
-                      key={key} 
-                      className={`network-item ${searchNetwork === key ? 'active' : ''}`}
-                      onClick={() => handleNetworkChange(key)}
-                    >
-                      <img 
-                        src={network.icon} 
-                        alt={network.name} 
-                        className="network-icon"
-                      />
-                      <span className="network-name">{network.name}</span>
-                      {network.name === 'Monad Testnet' && (
-                        <span className="network-badge">新</span>
-                      )}
-                      {searchNetwork === key && (
-                        <span className="network-check">✓</span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            {isSearching ? (
-              <div className="search-loading">搜索中...</div>
-            ) : searchQuery && searchResults.length > 0 ? (
-              <div className="token-list-dark">
-                {searchResults.map((token) => (
-                  <div 
-                    key={token.contractAddress || token.symbol} 
-                    className="token-item-dark"
-                    onClick={() => selectToken(token)}
-                  >
-                    <div className="token-icon-container">
-                      {token.symbol && token.symbol !== 'Unknown' ? (
-                        getDefaultTokenIcon(token.symbol)
-                      ) : (
-                        <div className="default-token-icon unknown">?</div>
-                      )}
-                      <span className="token-address-short">
-                        {token.contractAddress ? `${token.contractAddress.slice(0, 6)}...${token.contractAddress.slice(-4)}` : ''}
-                      </span>
-                    </div>
-                    <div className="token-info-dark">
-                      <span className="token-symbol-dark">{token.symbol}</span>
-                      <span className="token-name-dark">{token.name}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : searchQuery ? (
-              <div className="no-results">未找到匹配的代币</div>
-            ) : (
-              <div className="token-list-dark">
-                {COMMON_TOKENS.map((token) => (
-                  <div 
-                    key={token.symbol} 
-                    className="token-item-dark"
-                    onClick={() => selectToken({...token, network: searchNetwork})}
-                  >
-                    <div className="token-icon-container">
-                      {token.icon ? (
-                        <img src={token.icon} alt={token.name} className="token-icon" />
-                      ) : (
-                        getDefaultTokenIcon(token.symbol)
-                      )}
-                    </div>
-                    <div className="token-info-dark">
-                      <span className="token-symbol-dark">{token.symbol}</span>
-                      <span className="token-name-dark">{token.name}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* 代币选择器模态框 - 使用新的TokenSearch组件 */}
+      <TokenSearch
+        isOpen={!!showTokenSelector}
+        onClose={() => setShowTokenSelector(null)}
+        onTokenSelect={selectToken}
+        activeNetwork={activeNetwork}
+        title={showTokenSelector === 'from' ? '选择发送代币' : '选择接收代币'}
+      />
     </div>
   );
 };

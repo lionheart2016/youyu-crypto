@@ -48,6 +48,34 @@
   margin-left: 4px;
 }
 
+/* 代币地址显示 - 统一格式 */
+.token-address {
+  font-size: 12px;
+  color: #666;
+  font-family: 'Courier New', monospace;
+  margin-top: 2px;
+  opacity: 0.8;
+}
+
+/* 内联地址显示样式 */
+.token-header-dark {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.token-address-inline {
+  font-size: 11px;
+  color: #888;
+  font-family: 'Courier New', monospace;
+  opacity: 0.8;
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
 /* 搜索输入框包装器 */
 .search-input-wrapper {
   position: relative;
@@ -559,17 +587,21 @@
 .token-info-dark {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-width: 0;
 }
 
 .token-symbol-dark {
   font-weight: 600;
   color: #ffffff;
   font-size: 16px;
+  line-height: 1.2;
 }
 
 .token-name-dark {
   font-size: 14px;
   color: rgba(255, 255, 255, 0.6);
+  line-height: 1.2;
 }
 
 /* 响应式设计 */
@@ -592,4 +624,56 @@
     width: 100%;
     max-height: 90vh;
   }
+  
+  /* 移动端内联地址显示优化 */
+  .token-header-dark {
+    gap: 6px;
+  }
+  
+  .token-address-inline {
+    font-size: 10px;
+    padding: 1px 4px;
+  }
+  
+  .token-symbol-dark {
+    font-size: 15px;
+  }
+  
+  .token-name-dark {
+    font-size: 13px;
+  }
+}
+
+/* 超小屏幕优化 */
+@media (max-width: 375px) {
+  .token-header-dark {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .token-address-inline {
+    font-size: 9px;
+  }
+}
+
+/* 快速选择代币按钮和图标样式 */
+.quick-token-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.quick-token-icon {
+  width: 24px;
+  height: 24px;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+  display: block;
 }
