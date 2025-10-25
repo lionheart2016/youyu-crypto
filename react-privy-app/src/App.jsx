@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { PrivyProvider, usePrivy, useCreateWallet, useWallets, useConnectWallet } from '@privy-io/react-auth'
-import TransactionSender from './components/TransactionSender'
 import UserInfo from './components/UserInfo'
 import WalletListView from './components/WalletListView'
 import WalletOperations from './components/WalletOperations'
 import WalletActions from './components/WalletActions'
-import LogoutButton from './components/LogoutButton'
 import AssetOverview from './components/AssetOverview'
 import ActivityHistory from './components/ActivityHistory'
-import TokenSwapCard from './components/TokenSwapCard'
 
 // 为浏览器环境添加Buffer支持
 import { Buffer } from 'buffer'
@@ -802,8 +799,7 @@ function PrivyAuth() {
                   network="sepolia"
                 />
               )}
-              
-              <LogoutButton onLogout={handleLogout} />
+             
               </div>
           )}
         </div>

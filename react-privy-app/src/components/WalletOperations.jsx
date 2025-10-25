@@ -1,4 +1,5 @@
 import React from 'react'
+import LogoutButton from './LogoutButton'
 
 /**
  * 钱包操作组件
@@ -9,7 +10,8 @@ const WalletOperations = ({
   onCreateWallet, 
   isConnectingExternal, 
   isCreatingWallet,
-  hasEmbeddedWallet 
+  hasEmbeddedWallet,
+  handleLogout 
 }) => {
   return (
     <div className="wallet-operations-section">
@@ -35,6 +37,8 @@ const WalletOperations = ({
             {isCreatingWallet ? '⏳ 创建中...' : '💳 创建钱包'}
           </button>
         )}
+
+         <LogoutButton />
       </div>
     </div>
   )
