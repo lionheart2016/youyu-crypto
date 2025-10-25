@@ -19,14 +19,37 @@ import { NETWORKS, COMMON_TOKENS, QUICK_SELECT_TOKENS } from './constants';
  */
 const getTokenPrice = async (symbol) => {
   try {
-    // 注意：实际应用中应该使用更可靠的价格API
-    // 这里使用CoinGecko的简单API作为示例
-    const coinId = symbol.toLowerCase() === 'eth' ? 'ethereum' : symbol.toLowerCase();
-    const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd`);
+    // 使用Binance API获取代币价格
+    // 构建交易对，大部分代币使用USDT交易对，ETH特殊处理
+    const tradingPair = symbol.toUpperCase() === 'ETH' ? 'ETHUSDT' : `${symbol.toUpperCase()}USDT`;
+    
+    // 调用Binance API获取价格
+    const response = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${tradingPair}`);
+    
+    // 检查响应状态
+    if (!response.ok) {
+      // 如果直接查询USDT交易对失败，尝试其他常见交易对或返回备用值
+      console.warn(`获取${symbol}价格失败，响应状态:`, response.status);
+      
+      // 如果是ETH，可以尝试BNBETH然后再转换成USD
+      if (symbol.toUpperCase() === 'ETH') {
+        return 0; // 在实际应用中可以添加备用逻辑
+      }
+      return 0;
+    }
+    
     const data = await response.json();
-    return data[coinId]?.usd || 0;
+    
+    // 检查返回的数据格式
+    if (!data || !data.price) {
+      console.warn(`获取${symbol}价格失败，返回数据格式不正确:`, data);
+      return 0;
+    }
+    
+    // 将价格转换为数字并返回
+    return parseFloat(data.price) || 0;
   } catch (error) {
-    console.error('获取价格数据失败:', error);
+    console.error(`获取${symbol}价格数据失败:`, error);
     return 0;
   }
 };
@@ -52,7 +75,7 @@ const TokenSwapCard = ({ walletAddress, activeNetwork = 'sepolia' }) => {
   const [swapStatus, setSwapStatus] = useState('idle'); // idle, pending, success, error
   const [swapError, setSwapError] = useState('');
   const [swapHash, setSwapHash] = useState('');
-  // 代币搜索相关状态 - 已移至TokenSearch组件
+
 
   /**
    * 处理网络切换

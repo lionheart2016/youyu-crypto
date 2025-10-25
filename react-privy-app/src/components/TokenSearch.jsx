@@ -88,7 +88,7 @@ const TokenSearch = ({
         symbol: token.symbol || 'Unknown',
         name: token.name || token.symbol || 'Unknown Token',
         decimals: parseInt(token.decimals) || 18,
-        contractAddress: token.address,
+        contractAddress: token.address_hash, // 使用address_hash字段作为地址
         network: searchNetwork
       }));
       

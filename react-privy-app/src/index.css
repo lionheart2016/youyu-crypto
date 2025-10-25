@@ -190,10 +190,37 @@ body {
 
 .main-content {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 20px;
   max-width: 100%;
   padding: 0 20px;
+  align-items: flex-start;
+}
+
+/* 针对UserInfo和WalletListView组件的样式调整 */
+.main-content > .user-info-section {
+  flex: 1;
+  min-width: 300px;
+  max-width: 45%;
+}
+
+.main-content > .wallet-list-view {
+  flex: 1;
+  min-width: 300px;
+  max-width: 45%;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .main-content {
+    flex-direction: column;
+  }
+  
+  .main-content > .user-info-section,
+  .main-content > .wallet-list-view {
+    max-width: 100%;
+  }
 }
 
 .user-info-section {

@@ -803,14 +803,6 @@ function PrivyAuth() {
                 />
               )}
               
-              {/* 代币交换功能 - 只有在有钱包地址时显示 */}
-              {activeWallet?.address && (
-                <TokenSwapCard 
-                  walletAddress={activeWallet.address}
-                  network="sepolia"
-                />
-              )}
-              
               <LogoutButton onLogout={handleLogout} />
               </div>
           )}

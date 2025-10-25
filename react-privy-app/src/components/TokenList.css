@@ -84,11 +84,13 @@
 .token-info {
   flex: 1;
   min-width: 0;
+  text-align: left;
 }
 
 /* 代币符号头部 */
 .token-header {
   margin-bottom: 4px;
+  text-align: left;
 }
 
 .token-symbol {
