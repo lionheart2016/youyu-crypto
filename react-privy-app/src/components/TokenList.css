@@ -1,0 +1,141 @@
+/* TokenList 容器样式 */
+.token-list {
+  background-color: rgba(15, 15, 15, 0.8);
+  border-radius: 12px;
+  overflow: hidden;
+  max-height: 600px;
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* 空状态样式 */
+.token-list.empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}
+
+.empty-state p {
+  color: #a0a0a0;
+  font-size: 16px;
+}
+
+/* 代币列表项样式 */
+.token-item {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+.token-item:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.token-item:last-child {
+  border-bottom: none;
+}
+
+/* 代币图标样式 */
+.token-icon-container {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16px;
+  border: 2px solid;
+  background-color: #2d3748;
+  position: relative;
+}
+
+/* 以太坊标志叠加 */
+.token-icon-container::after {
+  content: "◈";
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #2d3748;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #ffffff;
+  border: 2px solid rgba(15, 15, 15, 0.8);
+}
+
+/* 代币图标文字 */
+.token-icon-text,
+.default-token-icon {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* 代币信息区域 */
+.token-info {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 代币符号头部 */
+.token-header {
+  margin-bottom: 4px;
+}
+
+.token-symbol {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+/* 代币详情行 */
+.token-details {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* 代币名称 */
+.token-name {
+  font-size: 15px;
+  color: #c0c0c0;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+/* 代币地址 */
+.token-address {
+  font-size: 14px;
+  color: #a0a0a0;
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  font-weight: 400;
+}
+
+/* 滚动条样式 */
+.token-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.token-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.token-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.token-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './TokenSearch.css';
 import { NETWORKS, COMMON_TOKENS, QUICK_SELECT_TOKENS } from './constants';
+import TokenList from './TokenList';
 
 
 /**
@@ -163,7 +164,6 @@ const TokenSearch = ({
               autoFocus
               autocomplete="off"
               autocorrect="off"
-
               name="token-search-input"
               id="token-search-input"
               inputMode="text"
@@ -217,68 +217,30 @@ const TokenSearch = ({
           {isSearching ? (
             <div className="search-loading">搜索中...</div>
           ) : searchQuery && searchResults.length > 0 ? (
-            <div className="token-list">
-              {searchResults.map((token) => (
-                <div 
-                  key={token.contractAddress || token.symbol} 
-                  className="token-item"
-                  onClick={() => handleTokenSelect(token)}
-                >
-                  <div className="token-icon-container">
-                    {token.symbol && token.symbol !== 'Unknown' ? (
-                      getDefaultTokenIcon(token.symbol)
-                    ) : (
-                      <div className="default-token-icon unknown">?</div>
-                    )}
-                  </div>
-                  <div className="token-info">
-                    <div className="token-header">
-                      <span className="token-symbol">{token.symbol}</span>
-                      {token.contractAddress && formatAddress(token.contractAddress) && (
-                        <span className="token-address-inline">
-                          {formatAddress(token.contractAddress)}
-                        </span>
-                      )}
-                    </div>
-                    <span className="token-name">{token.name}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <TokenList 
+              tokens={searchResults.map(token => ({
+                ...token,
+                address: token.contractAddress, // 映射地址字段以匹配TokenList组件期望的格式
+                iconColor: stringToColor(token.symbol || ''),
+                iconBorderColor: '#4a5568'
+              }))}
+              onTokenSelect={handleTokenSelect}
+            />
           ) : searchQuery ? (
             <div className="no-results">未找到匹配的代币</div>
           ) : (
-            <div className="token-list">
-              {COMMON_TOKENS.map((token) => {
+            <TokenList 
+              tokens={COMMON_TOKENS.map(token => {
                 const tokenAddress = token.addresses?.[searchNetwork] || '';
-                return (
-                  <div 
-                    key={token.symbol} 
-                    className="token-item"
-                    onClick={() => handleTokenSelect({...token, network: searchNetwork, contractAddress: tokenAddress})}
-                  >
-                    <div className="token-icon-container">
-                      {token.icon ? (
-                        <img src={token.icon} alt={token.name} className="token-icon" />
-                      ) : (
-                        getDefaultTokenIcon(token.symbol)
-                      )}
-                    </div>
-                    <div className="token-info">
-                      <div className="token-header">
-                        <span className="token-symbol">{token.symbol}</span>
-                        {formatAddress(tokenAddress) && (
-                          <span className="token-address-inline">
-                            {formatAddress(tokenAddress)}
-                          </span>
-                        )}
-                      </div>
-                      <span className="token-name">{token.name}</span>
-                    </div>
-                  </div>
-                );
+                return {
+                  ...token,
+                  address: tokenAddress,
+                  iconColor: stringToColor(token.symbol || ''),
+                  iconBorderColor: '#4a5568'
+                };
               })}
-            </div>
+              onTokenSelect={(token) => handleTokenSelect({...token, network: searchNetwork, contractAddress: token.address})}
+            />
           )}
         </div>
       </div>
