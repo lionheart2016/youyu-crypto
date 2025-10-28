@@ -16,14 +16,40 @@ export default defineConfig({
       'Cross-Origin-Opener-Policy': 'same-origin-allow-popups'
     }
   },
-  build: {
-    outDir: 'dist',
-    rollupOptions: {
-      output: {
-        entryFileNames: 'assets/[name].js',
-        chunkFileNames: 'assets/[name].js',
-        assetFileNames: 'assets/[name].[ext]'
-      }
+// 排除测试文件的监视和加载
+  watchOptions: {
+    ignore: [
+      '**/__tests__/**',
+      '**/*.test.*',
+      '**/*.spec.*'
+    ]
+  },
+  define: {
+    global: 'globalThis',
+    'process.env': {},
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      // Node.js global to browser globalThis
+      define: {
+        global: 'globalThis'
+      },
+      // Enable esbuild polyfill plugins
+      plugins: [
+        {
+          name: 'fix-node-globals-polyfill',
+          setup(build) {
+            build.onResolve({ filter: /_virtual-process-polyfill_./ }, args => ({
+              path: args.path,
+              namespace: 'process-polyfill',
+            }))
+            build.onLoad({ filter: /.*/, namespace: 'process-polyfill' }, () => ({
+              contents: 'export default { env: {} }'
+            }))
+          }
+        }
+      ]
     }
   }
+
 })

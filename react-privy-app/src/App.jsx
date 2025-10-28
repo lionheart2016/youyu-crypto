@@ -6,6 +6,8 @@ import WalletOperations from './components/WalletOperations'
 import WalletActions from './components/WalletActions'
 import AssetOverview from './components/AssetOverview'
 import ActivityHistory from './components/ActivityHistory'
+import {SmartWalletsProvider} from '@privy-io/react-auth/smart-wallets';
+import { sepolia } from 'viem/chains';
 
 // 为浏览器环境添加Buffer支持
 import { Buffer } from 'buffer'
@@ -14,6 +16,7 @@ window.Buffer = window.Buffer || Buffer
 // Privy配置 - 使用真实的应用ID
 const privyConfig = {
   appId: import.meta.env.VITE_PRIVY_APP_ID,
+  defaultChain: sepolia,
   appearance: {
     theme: 'light',
     accentColor: '#3B82F6',
@@ -227,18 +230,18 @@ function PrivyAuth() {
     
     // 方法2: 从user.linkedAccounts获取钱包（包括嵌入式钱包）
     if (user?.linkedAccounts) {
-      const walletAccounts = user.linkedAccounts.filter(account => account.type === 'wallet')
+      const walletAccounts = user.linkedAccounts.filter(account => account.type && account.type.includes('wallet'))
       console.log('从linkedAccounts找到的钱包账户:', walletAccounts)
       
       walletAccounts.forEach(account => {
         if (account.address && !processedAddresses.has(account.address.toLowerCase())) {
-          const isEmbedded = account.walletClientType === 'privy'
+          const isEmbedded = account.walletClientType === 'privy' || account.type === 'smart_wallet'
           walletList.push({
             address: account.address,
-            chain: account.chain || 'ethereum',
+            chain: account.chainType || 'ethereum',
             type: isEmbedded ? 'embedded' : 'external',
             walletType: account.walletClientType || (isEmbedded ? 'privy' : 'unknown'),
-            name: isEmbedded ? '嵌入式钱包' : (account.walletClientType || '外部钱包')
+            name: account.walletClientType || 'smart wallet'
           })
           processedAddresses.add(account.address.toLowerCase())
         }
@@ -810,7 +813,9 @@ function PrivyAuth() {
 function App() {
   return (
     <PrivyProvider appId={privyConfig.appId} config={privyConfig}>
-      <PrivyAuth />
+      <SmartWalletsProvider>
+        <PrivyAuth />
+      </SmartWalletsProvider>
     </PrivyProvider>
   )
 }

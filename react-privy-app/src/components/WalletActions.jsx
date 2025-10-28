@@ -74,9 +74,6 @@ function WalletActions({
         {/* 转账功能 - 由TransactionSender组件管理所有交易相关状态 */}
         <TransactionSender 
           activeWallet={activeWallet}
-          walletInfo={walletInfo}
-          wallets={wallets}
-          externalWallets={externalWallets}
           user={user}
           createWallet={createWallet}
           switchToSepolia={switchToSepolia}

@@ -56,10 +56,10 @@ build_app() {
     cd "$SCRIPT_DIR/react-privy-app"
     
     yellow "安装依赖..."
-    npm install
+    yarn install
     
     yellow "构建应用..."
-    npm run build
+    yarn build
     
     green "React应用构建完成!"
 }

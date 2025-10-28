@@ -1,17 +1,13 @@
 import React, { useState } from 'react'
 import { usePrivy } from '@privy-io/react-auth'
+import {useSmartWallets} from '@privy-io/react-auth/smart-wallets';
+import { baseSepolia, sepolia } from 'viem/chains';
 
-const TransactionSender = ({ 
-  activeWallet, 
-  walletInfo, 
-  wallets, 
-  externalWallets, 
-  user, 
-  createWallet,
-  switchToSepolia
-}) => {
+
+
+const TransactionSender = () => {
   // 获取Privy SDK功能
-  const { sendTransaction } = usePrivy()
+  const { sendTransaction, createWallet, wallets, smartWallets } = usePrivy()
   // 交易表单状态
   const [transactionForm, setTransactionForm] = useState({
     recipient: '0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1',
@@ -35,22 +31,13 @@ const TransactionSender = ({
   }
 
   const handleTransactionSubmit = () => {
-    const { recipient, amount } = transactionForm
+    const { recipient } = transactionForm
     
     // 验证地址格式
     if (!validateAddress(recipient)) {
       setTransactionResult({
         success: false,
         error: '接收方地址格式不正确，请输入有效的以太坊地址'
-      })
-      return
-    }
-    
-    // 验证金额
-    if (!amount || parseFloat(amount) <= 0) {
-      setTransactionResult({
-        success: false,
-        error: '交易金额必须大于0'
       })
       return
     }
@@ -91,6 +78,8 @@ const TransactionSender = ({
     return BigInt(totalWeiStr)
   }
 
+  const {client, walletClient} = useSmartWallets();
+
   // 处理转账请求
   const handleSendTransaction = async (transactionData) => {
     try {
@@ -99,111 +88,48 @@ const TransactionSender = ({
       
       console.log('💸 开始发送交易...')
       console.log('交易数据:', transactionData)
-      console.log('激活的钱包:', activeWallet)
-      console.log('钱包信息:', walletInfo)
       
-      // 首先尝试切换到Sepolia网络
-      await switchToSepolia()
+      // 使用Smart Wallets客户端发送交易（优先方式）
+      const uiOptions = {
+        title: 'smart 交易',
+        description: `向 ${transactionData.to.slice(0, 6)}...${transactionData.to.slice(-4)} 转账 ${transactionData.value} ETH`,
+        buttonText: '确认发送'
+      };
       
-      // 优先使用激活的钱包
-      let walletToUse = activeWallet
-      
-      // 如果没有激活的钱包，尝试从钱包列表中获取
-      if (!walletToUse && wallets?.length > 0) {
-        walletToUse = wallets[0]
-        console.log('使用第一个钱包作为激活钱包:', walletToUse)
+      try {
+        console.log('尝试使用Smart Wallets客户端发送交易...')
+
+        const txHash = await client.sendTransaction({
+          to: transactionData.to,
+          value: ethToWei(transactionData.value),
+        }, uiOptions);
+        
+        console.log('交易哈希:', txHash)
+        
+        setTransactionResult({
+          success: true,
+          hash: txHash,
+          from: "智能钱包",
+          to: transactionData.to,
+          value: transactionData.value.toString()
+        })
+        
+        return txHash
+      } catch (smartWalletError) {
+        console.warn('Smart Wallet交易失败，尝试使用标准钱包方法:', smartWalletError)
       }
       
-      // 如果仍然没有钱包，使用旧的钱包信息
-      if (!walletToUse && walletInfo?.address) {
-        walletToUse = {
-          address: walletInfo.address,
-          name: walletInfo.type === 'embedded' ? '嵌入式钱包' : '外部钱包',
-          type: walletInfo.type,
-          chain: 'ethereum'
-        }
-        console.log('使用旧的钱包信息:', walletToUse)
+      // 如果没有Smart Wallet或失败，尝试从用户钱包列表中获取钱包
+      if (!wallets || wallets.length === 0) {
+        throw new Error('没有可用的钱包，请先连接或创建钱包')
       }
       
-      if (!walletToUse?.address) {
-        throw new Error('没有可用的钱包地址')
-      }
+      // 获取第一个可用钱包
+      const wallet = wallets[0]
+      console.log('使用钱包进行交易:', wallet)
       
-      // 尝试获取实际的钱包对象进行交易
-      let wallet = null
-      
-      // 方法1: 从wallets数组中获取匹配的钱包
-      if (wallets && wallets.length > 0) {
-        wallet = wallets.find(w => w.address === walletToUse.address)
-        if (wallet) {
-          console.log('从wallets数组获取钱包:', wallet)
-        }
-      }
-      
-      // 方法2: 尝试从用户账户中获取钱包
-      if (!wallet && user?.linkedAccounts) {
-        const walletAccount = user.linkedAccounts.find(account => 
-          account.type === 'wallet' && account.address === walletToUse.address
-        )
-        if (walletAccount) {
-          console.log('从用户账户获取钱包信息:', walletAccount)
-          // 创建一个模拟钱包对象
-          wallet = {
-            address: walletAccount.address,
-            chain: walletAccount.chain,
-            getEthereumProvider: async () => {
-              // 尝试获取provider
-              try {
-                if (walletToUse.type === 'embedded' && window.ethereum) {
-                  return window.ethereum
-                }
-                return null
-              } catch (error) {
-                console.error('获取provider失败:', error)
-                return null
-              }
-            },
-            sendTransaction: async (tx) => {
-              // 这里需要实现实际的签名逻辑
-              // 对于嵌入式钱包，我们可以尝试使用provider和signer
-              if (walletToUse.type === 'embedded') {
-                try {
-                  const provider = wallet.getEthereumProvider ? await wallet.getEthereumProvider() : null
-                  if (provider) {
-                    const signer = await provider.getSigner(walletAccount.address)
-                    return await signer.sendTransaction(tx)
-                  } else {
-                    throw new Error('无法获取provider')
-                  }
-                } catch (error) {
-                  console.error('使用provider签名失败:', error)
-                  // 如果provider方法失败，尝试创建新钱包
-                  const embeddedWallet = await createWallet()
-                  return await embeddedWallet.sendTransaction(tx)
-                }
-              } else {
-                throw new Error('无法获取钱包交易功能')
-              }
-            }
-          }
-        }
-      }
-      
-      // 方法3: 如果是外部钱包，尝试重新连接
-      if (!wallet && walletToUse.type === 'external' && externalWallets && externalWallets.length > 0) {
-        wallet = externalWallets.find(w => w.address === walletToUse.address)
-        if (wallet) {
-          console.log('从外部钱包列表获取钱包:', wallet)
-        }
-      }
-      
-      if (!wallet) {
-        console.error('无法获取可用的钱包对象')
-        console.error('walletToUse:', walletToUse)
-        console.error('wallets:', wallets)
-        console.error('user:', user)
-        console.error('externalWallets:', externalWallets)
-        throw new Error('无法获取可用的钱包对象，请确保钱包已正确连接')
+      if (!wallet?.address) {
+        throw new Error('钱包地址无效')
       }
       
       console.log('使用钱包进行交易:', wallet)
@@ -245,7 +171,7 @@ const TransactionSender = ({
         const valueInWei = ethToWei(valueStr)
         console.log('💎 转换后的value (wei):', valueInWei.toString())
         
-        const fromAddress = wallet.address || walletInfo.address
+        const fromAddress = wallet.address
         console.log('👤 使用的from地址:', fromAddress)
         
         console.log('🎯 准备创建交易对象...')
@@ -379,7 +305,7 @@ const TransactionSender = ({
       setTransactionResult({
         success: true,
         hash: txResponse.hash,
-        from: activeWallet?.address || wallet.address || walletInfo.address,
+        from: wallet.address,
         to: transaction.to,
         value: transaction.value.toString()
       })
@@ -438,8 +364,6 @@ const TransactionSender = ({
               value={transactionForm.amount}
               onChange={(e) => handleTransactionFormChange('amount', e.target.value)}
               disabled={isSendingTransaction}
-              step="0.001"
-              min="0.001"
             />
           </div>
           
@@ -465,7 +389,7 @@ const TransactionSender = ({
                   <p><strong>转账金额:</strong> <span className="amount-highlight">{transactionForm.amount} ETH</span></p>
                   <p><strong>交易哈希:</strong> {transactionResult.hash?.slice(0, 20)}...</p>
                   <p><strong>状态:</strong> {transactionResult.status}</p>
-                  <p><strong>发送钱包:</strong> {activeWallet?.address ? `${activeWallet.address.slice(0, 6)}...${activeWallet.address.slice(-4)}` : '未知'}</p>
+                  <p><strong>发送钱包:</strong> {wallets && wallets.length > 0 ? `${wallets[0].address.slice(0, 6)}...${wallets[0].address.slice(-4)}` : '未知'}</p>
                 </div>
               </div>
             ) : (
@@ -496,13 +420,13 @@ const TransactionSender = ({
                   <div className="detail-section">
                     <h4>📤 发送方信息</h4>
                     <div className="detail-item">
-                      <span className="detail-label">发送钱包:</span>
-                      <span className="detail-value">{activeWallet?.name}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-label">发送地址:</span>
-                      <span className="detail-value address">{activeWallet?.address}</span>
-                    </div>
+                    <span className="detail-label">发送钱包:</span>
+                    <span className="detail-value">{wallets && wallets.length > 0 ? '连接的钱包' : '未知'}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">发送地址:</span>
+                    <span className="detail-value address">{wallets && wallets.length > 0 ? wallets[0].address : '未知'}</span>
+                  </div>
                   </div>
                   
                   <div className="detail-section">
