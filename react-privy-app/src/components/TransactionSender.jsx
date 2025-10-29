@@ -1,9 +1,8 @@
 import React, { useState } from 'react'
 import { usePrivy } from '@privy-io/react-auth'
-import {useSmartWallets} from '@privy-io/react-auth/smart-wallets';
+import { useSmartWallets } from '@privy-io/react-auth/smart-wallets';
 import { baseSepolia, sepolia } from 'viem/chains';
-
-
+import { encodeFunctionData, parseAbi } from 'viem';
 
 const TransactionSender = () => {
   // 获取Privy SDK功能
@@ -32,7 +31,7 @@ const TransactionSender = () => {
 
   const handleTransactionSubmit = () => {
     const { recipient } = transactionForm
-    
+
     // 验证地址格式
     if (!validateAddress(recipient)) {
       setTransactionResult({
@@ -41,7 +40,7 @@ const TransactionSender = () => {
       })
       return
     }
-    
+
     // 显示交易预览
     setShowTransactionPreview(true)
   }
@@ -64,48 +63,67 @@ const TransactionSender = () => {
     // 1 ETH = 10^18 wei
     const weiPerEth = BigInt('1000000000000000000')
     const ethAmountStr = ethAmount.toString()
-    
+
     // 处理小数点
     const parts = ethAmountStr.split('.')
     const wholePart = parts[0] || '0'
     const decimalPart = parts[1] || ''
-    
+
     // 确保小数部分有18位
     const paddedDecimal = decimalPart.padEnd(18, '0').slice(0, 18)
-    
+
     // 组合成完整的wei值
     const totalWeiStr = wholePart + paddedDecimal
     return BigInt(totalWeiStr)
   }
 
-  const {client, walletClient} = useSmartWallets();
+  const { client, walletClient } = useSmartWallets();
 
   // 处理转账请求
   const handleSendTransaction = async (transactionData) => {
     try {
       setIsSendingTransaction(true)
       setTransactionResult(null)
-      
+
       console.log('💸 开始发送交易...')
       console.log('交易数据:', transactionData)
-      
+
       // 使用Smart Wallets客户端发送交易（优先方式）
-      const uiOptions = {
-        title: 'smart 交易',
-        description: `向 ${transactionData.to.slice(0, 6)}...${transactionData.to.slice(-4)} 转账 ${transactionData.value} ETH`,
-        buttonText: '确认发送'
-      };
-      
+
       try {
         console.log('尝试使用Smart Wallets客户端发送交易...')
 
+        // ERC-20 Paymaster配置
+        // 使用Smart Wallets客户端发送交易（优先方式）
+
+
+        const tokenAddress = '0xFC3e86566895Fb007c6A0d3809eb2827DF94F751'; // PIM  token
+        const paymasterAddress = '0x888888888888Ec68A58AB8094Cc1AD20Ba3D2402'; // Pimlico ERC-20 Paymaster地址
+
+        // 使用calls数组格式发送交易，支持ERC-20 Paymaster
         const txHash = await client.sendTransaction({
-          to: transactionData.to,
-          value: ethToWei(transactionData.value),
-        }, uiOptions);
-        
+          calls: [
+            {
+              to: tokenAddress,
+              data: encodeFunctionData({
+                abi: parseAbi(['function approve(address,uint256)']),
+                functionName: 'approve',
+                args: [paymasterAddress, ethToWei(0.0001)], // 授权paymaster使用代币支付gas
+              }),
+            },
+            {
+              to: transactionData.to,
+              data: '0x', // 空数据表示ETH转账
+              value: ethToWei(transactionData.value),
+            },
+          ],
+          paymasterContext: {
+            token: tokenAddress,
+          },
+        });
+
         console.log('交易哈希:', txHash)
-        
+
         setTransactionResult({
           success: true,
           hash: txHash,
@@ -113,67 +131,67 @@ const TransactionSender = () => {
           to: transactionData.to,
           value: transactionData.value.toString()
         })
-        
+
         return txHash
       } catch (smartWalletError) {
         console.warn('Smart Wallet交易失败，尝试使用标准钱包方法:', smartWalletError)
       }
-      
+
       // 如果没有Smart Wallet或失败，尝试从用户钱包列表中获取钱包
       if (!wallets || wallets.length === 0) {
         throw new Error('没有可用的钱包，请先连接或创建钱包')
       }
-      
+
       // 获取第一个可用钱包
       const wallet = wallets[0]
       console.log('使用钱包进行交易:', wallet)
-      
+
       if (!wallet?.address) {
         throw new Error('钱包地址无效')
       }
-      
+
       console.log('使用钱包进行交易:', wallet)
-      
+
       // 添加一个明确的标记来确认代码执行到这里
       console.log('🔍 DEBUG: 即将开始解析交易数据...')
-      
+
       // 确保transactionData存在
       if (!transactionData) {
         console.error('❌ transactionData 为空或undefined')
         throw new Error('交易数据不能为空')
       }
-      
+
       // 解析交易数据
       console.log('📋 准备解析transactionData:', transactionData)
       const { to, value, data = '0x', gasLimit, gasPrice, maxFeePerGas, maxPriorityFeePerGas } = transactionData
-      
+
       console.log('📝 解析后的参数:', { to, value, data, gasLimit, gasPrice, maxFeePerGas, maxPriorityFeePerGas })
-      
+
       if (!to || !value) {
         console.error('❌ 缺少必要的交易参数:', { to, value })
         throw new Error('缺少必要的交易参数 (to, value)')
       }
-      
+
       console.log('✅ 解析交易参数成功:', { to, value, data })
-      
+
       // 创建交易对象 - 修复parseEther的使用
       let transaction
       try {
         console.log('🔧 开始创建交易对象...')
         console.log('💰 原始value:', value)
         console.log('📊 value类型:', typeof value)
-        
+
         // 确保value是字符串格式，并使用手动函数转换为wei
         const valueStr = String(value)
         console.log('📝 转换后的value字符串:', valueStr)
-        
+
         console.log('⚡ 准备调用ethToWei函数...')
         const valueInWei = ethToWei(valueStr)
         console.log('💎 转换后的value (wei):', valueInWei.toString())
-        
+
         const fromAddress = wallet.address
         console.log('👤 使用的from地址:', fromAddress)
-        
+
         console.log('🎯 准备创建交易对象...')
         transaction = {
           to: to,
@@ -181,7 +199,7 @@ const TransactionSender = () => {
           data: data,
           from: fromAddress
         }
-        
+
         console.log('🎉 创建的交易对象:', transaction)
       } catch (parseError) {
         console.error('💥 创建交易对象失败:', parseError)
@@ -192,9 +210,9 @@ const TransactionSender = () => {
         })
         throw new Error(`创建交易对象失败: ${parseError.message}`)
       }
-      
+
       console.log('✨ 交易对象创建成功:', transaction)
-      
+
       // 添加gas参数
       if (gasLimit) {
         console.log('添加gasLimit:', gasLimit)
@@ -212,16 +230,16 @@ const TransactionSender = () => {
         console.log('添加maxPriorityFeePerGas:', maxPriorityFeePerGas)
         transaction.maxPriorityFeePerGas = maxPriorityFeePerGas
       }
-      
+
       console.log('最终交易对象:', transaction)
-      
+
       // 发送交易
       let txResponse
       try {
         // 优先使用usePrivy的sendTransaction方法（推荐方式）
         if (sendTransaction) {
           console.log('使用usePrivy的sendTransaction方法发送交易...')
-          
+
           // 构建符合Privy SDK标准的交易参数
           const privyTransaction = {
             to: transaction.to,
@@ -235,26 +253,26 @@ const TransactionSender = () => {
             maxPriorityFeePerGas: transaction.maxPriorityFeePerGas,
             nonce: transaction.nonce
           }
-          
+
           console.log('Privy SDK交易参数:', privyTransaction)
-          
+
           // 使用usePrivy的sendTransaction方法
           txResponse = await sendTransaction({
             to: transaction.to,
             value: transaction.value, // 确保值为字符串格式
           },
-          {
-            address: transaction.from,
-          })
+            {
+              address: transaction.from,
+            })
           console.log('usePrivy sendTransaction成功:', txResponse)
-          
-        }  else {
+
+        } else {
           // 如果Privy SDK方法不可用，尝试重新创建钱包
           console.log('Privy SDK方法不可用，尝试重新创建钱包...')
-          
+
           try {
             const newWallet = await createWallet()
-            
+
             if (newWallet && newWallet.sendTransaction) {
               console.log('使用新创建的钱包发送交易...')
               const privyTransaction = {
@@ -275,12 +293,12 @@ const TransactionSender = () => {
       } catch (txError) {
         console.error('主交易方法失败:', txError)
         console.error('错误详情:', txError.message)
-        
+
         // 如果主方法失败，尝试重新创建钱包作为备用方案
         try {
           console.log('尝试重新创建钱包...')
           const newWallet = await createWallet()
-          
+
           if (newWallet && newWallet.sendTransaction) {
             console.log('使用新创建的钱包发送交易...')
             const privyTransaction = {
@@ -298,7 +316,7 @@ const TransactionSender = () => {
           throw new Error(`交易发送失败: ${txError.message || '未知错误'}`)
         }
       }
-      
+
       console.log('✅ 交易发送成功:', txResponse)
       console.log('交易哈希:', txResponse.hash)
 
@@ -309,15 +327,15 @@ const TransactionSender = () => {
         to: transaction.to,
         value: transaction.value.toString()
       })
-    
-      
+
+
     } catch (error) {
       console.error('💥 交易发送失败:', error)
       setTransactionResult({
         success: false,
         error: error.message || '交易发送失败'
       })
-      
+
       // 通知父窗口交易失败
       if (onTransactionResult) {
         onTransactionResult({
@@ -338,7 +356,7 @@ const TransactionSender = () => {
           <h5>💸 发送交易</h5>
           <span className="action-description">发送测试交易</span>
         </div>
-        
+
         {/* 交易输入表单 */}
         <div className="transaction-form">
           <div className="form-group">
@@ -353,7 +371,7 @@ const TransactionSender = () => {
               disabled={isSendingTransaction}
             />
           </div>
-          
+
           <div className="form-group">
             <label htmlFor="transaction-amount">转账金额 (ETH):</label>
             <input
@@ -366,8 +384,8 @@ const TransactionSender = () => {
               disabled={isSendingTransaction}
             />
           </div>
-          
-          <button 
+
+          <button
             className="action-btn transaction-btn"
             onClick={handleTransactionSubmit}
             disabled={isSendingTransaction}
@@ -375,7 +393,7 @@ const TransactionSender = () => {
             {isSendingTransaction ? '⏳ 发送中...' : '💸 发送交易'}
           </button>
         </div>
-        
+
         {transactionResult && (
           <div className={`result-display ${transactionResult.success ? 'success' : 'error'}`}>
             {transactionResult.success ? (
@@ -404,7 +422,7 @@ const TransactionSender = () => {
           </div>
         )}
       </div>
-      
+
       {/* 交易预览模态框 */}
       {showTransactionPreview && (
         <div className="transaction-preview-modal">
@@ -414,21 +432,21 @@ const TransactionSender = () => {
                 <h3>🔍 交易确认</h3>
                 <button className="close-btn" onClick={cancelTransaction}>✕</button>
               </div>
-              
+
               <div className="modal-body">
                 <div className="transaction-details">
                   <div className="detail-section">
                     <h4>📤 发送方信息</h4>
                     <div className="detail-item">
-                    <span className="detail-label">发送钱包:</span>
-                    <span className="detail-value">{wallets && wallets.length > 0 ? '连接的钱包' : '未知'}</span>
+                      <span className="detail-label">发送钱包:</span>
+                      <span className="detail-value">{wallets && wallets.length > 0 ? '连接的钱包' : '未知'}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">发送地址:</span>
+                      <span className="detail-value address">{wallets && wallets.length > 0 ? wallets[0].address : '未知'}</span>
+                    </div>
                   </div>
-                  <div className="detail-item">
-                    <span className="detail-label">发送地址:</span>
-                    <span className="detail-value address">{wallets && wallets.length > 0 ? wallets[0].address : '未知'}</span>
-                  </div>
-                  </div>
-                  
+
                   <div className="detail-section">
                     <h4>📥 接收方信息</h4>
                     <div className="detail-item">
@@ -436,7 +454,7 @@ const TransactionSender = () => {
                       <span className="detail-value address">{transactionForm.recipient}</span>
                     </div>
                   </div>
-                  
+
                   <div className="detail-section">
                     <h4>💰 交易详情</h4>
                     <div className="detail-item">
@@ -450,7 +468,7 @@ const TransactionSender = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="modal-footer">
                 <button className="modal-btn cancel" onClick={cancelTransaction}>
                   取消
