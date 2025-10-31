@@ -162,8 +162,6 @@ const TokenSearch = ({
               value={searchQuery}
               onChange={handleSearchChange}
               autoFocus
-              autocomplete="off"
-              autocorrect="off"
               name="token-search-input"
               id="token-search-input"
               inputMode="text"

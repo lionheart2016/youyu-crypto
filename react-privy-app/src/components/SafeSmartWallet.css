@@ -1,0 +1,328 @@
+/* Safe 智能钱包组件样式 */
+.safe-smart-wallet {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  margin: 20px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+}
+
+.safe-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.safe-header h3 {
+  color: #2c3e50;
+  margin: 0 0 8px 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.safe-description {
+  color: #7f8c8d;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.error-message {
+  background: #fee;
+  border: 1px solid #fcc;
+  color: #c33;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+}
+
+/* 创建 Safe 钱包界面 */
+.safe-creation-section {
+  text-align: center;
+}
+
+.creation-info {
+  margin-bottom: 24px;
+}
+
+.creation-info h4 {
+  color: #2c3e50;
+  margin-bottom: 12px;
+}
+
+.creation-info ul {
+  text-align: left;
+  display: inline-block;
+  margin: 16px 0;
+}
+
+.creation-info li {
+  margin: 8px 0;
+  color: #555;
+}
+
+.create-safe-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 16px 0;
+}
+
+.create-safe-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.create-safe-btn:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.warning-text {
+  color: #e74c3c;
+  font-size: 0.9rem;
+  margin-top: 8px;
+}
+
+/* Safe 钱包管理界面 */
+.safe-management-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.safe-info-card {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  border-left: 4px solid #667eea;
+}
+
+.safe-info-card h4 {
+  margin: 0 0 16px 0;
+  color: #2c3e50;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.info-item .label {
+  font-weight: 600;
+  color: #7f8c8d;
+}
+
+.info-item .value {
+  color: #2c3e50;
+  font-family: 'Courier New', monospace;
+}
+
+.info-item .value.address {
+  font-size: 0.85rem;
+}
+
+/* 所有者管理 */
+.owners-management {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.owners-management h5 {
+  margin: 0 0 16px 0;
+  color: #2c3e50;
+}
+
+.owners-list {
+  margin-bottom: 16px;
+}
+
+.owner-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.owner-address {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: #2c3e50;
+}
+
+.current-user-badge {
+  background: #27ae60;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+}
+
+.add-owner-form {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.owner-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.owner-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.add-owner-btn {
+  background: #27ae60;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.add-owner-btn:hover:not(:disabled) {
+  background: #219a52;
+}
+
+.add-owner-btn:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+}
+
+/* 阈值管理 */
+.threshold-management {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.threshold-management h5 {
+  margin: 0 0 16px 0;
+  color: #2c3e50;
+}
+
+.threshold-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.threshold-btn {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.threshold-btn:hover:not(:disabled) {
+  background: #2980b9;
+}
+
+.threshold-btn:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+}
+
+.threshold-display {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2c3e50;
+  min-width: 40px;
+  text-align: center;
+}
+
+/* 待处理交易 */
+.pending-transactions {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.pending-transactions h5 {
+  margin: 0 0 12px 0;
+  color: #856404;
+}
+
+.transactions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.transaction-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #ffeaa7;
+}
+
+.tx-hash {
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  color: #2c3e50;
+}
+
+.tx-status {
+  background: #f39c12;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .safe-smart-wallet {
+    padding: 16px;
+    margin: 16px 0;
+  }
+  
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .add-owner-form {
+    flex-direction: column;
+  }
+  
+  .threshold-controls {
+    justify-content: center;
+  }
+}

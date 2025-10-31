@@ -363,8 +363,6 @@ const TokenSwapCard = ({ walletAddress, activeNetwork = 'sepolia' }) => {
             onChange={(e) => setFromAmount(e.target.value)}
             className="amount-input-dark no-autofill"
             disabled={isLoading}
-            autocomplete="off"
-            autocorrect="off"
             name="token-amount-input"
             id="token-amount-input-send"
             formNoValidate

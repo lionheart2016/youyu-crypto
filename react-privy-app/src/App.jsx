@@ -6,6 +6,8 @@ import WalletOperations from './components/WalletOperations'
 import WalletActions from './components/WalletActions'
 import AssetOverview from './components/AssetOverview'
 import ActivityHistory from './components/ActivityHistory'
+import EIP7702Upgrader from './components/EIP7702Upgrader'
+import SafeSmartWallet from './components/SafeSmartWallet'
 import {SmartWalletsProvider} from '@privy-io/react-auth/smart-wallets';
 import { sepolia } from 'viem/chains';
 
@@ -784,6 +786,22 @@ function PrivyAuth() {
                   isSigning={isSigning}
                   signResult={signResult}
                   onSignMessage={() => handleSignMessage('Hello, Privy!')}
+                />
+              )}
+              
+              {/* EIP-7702 智能钱包升级功能 */}
+              {authenticated && (
+                <EIP7702Upgrader />
+              )}
+              
+              {/* Safe 智能钱包功能 */}
+              {authenticated && activeWallet?.address && (
+                <SafeSmartWallet 
+                  activeWallet={activeWallet}
+                  user={user}
+                  wallets={wallets}
+                  externalWallets={externalWallets}
+                  createWallet={createWallet}
                 />
               )}
               

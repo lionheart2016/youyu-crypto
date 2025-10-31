@@ -1,0 +1,307 @@
+/* EIP7702Upgrader组件样式 */
+.eip7702-upgrader {
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  border-radius: 16px;
+  padding: 24px;
+  margin: 16px 0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ecf0f1;
+}
+
+.action-header {
+  margin-bottom: 20px;
+}
+
+.action-header h5 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: #ecf0f1;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.action-description {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  line-height: 1.4;
+}
+
+.upgrade-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 钱包状态样式 */
+.wallet-status {
+  background: rgba(44, 62, 80, 0.8);
+  border-radius: 12px;
+  padding: 16px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.status-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.status-item:last-child {
+  margin-bottom: 0;
+}
+
+.status-label {
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.status-value {
+  font-weight: 600;
+  color: #ecf0f1;
+}
+
+.status-value.address,
+.status-value.implementation-address {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.85rem;
+  background: rgba(52, 73, 94, 0.9);
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: #ecf0f1;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Pimlico服务信息 */
+.pimlico-info {
+  background: rgba(44, 62, 80, 0.8);
+  border-radius: 12px;
+  padding: 16px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.pimlico-info h6 {
+  margin: 0 0 8px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #ecf0f1;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.pimlico-description {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.95;
+  line-height: 1.4;
+  color: #ecf0f1;
+}
+
+/* 功能列表样式 */
+.features-section {
+  background: rgba(44, 62, 80, 0.8);
+  border-radius: 12px;
+  padding: 16px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.features-section h6 {
+  margin: 0 0 12px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #ecf0f1;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.feature-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.feature-icon {
+  font-size: 1.2rem;
+  color: #ecf0f1;
+}
+
+.feature-text {
+  font-size: 0.9rem;
+  opacity: 0.95;
+  color: #ecf0f1;
+}
+
+/* 操作按钮样式 */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.action-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 180px;
+}
+
+.action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.upgrade-btn {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+}
+
+.upgrade-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+}
+
+.check-status-btn {
+  background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+}
+
+.check-status-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(78, 205, 196, 0.4);
+}
+
+/* 状态消息样式 */
+.status-message {
+  background: rgba(44, 62, 80, 0.8);
+  border-radius: 12px;
+  padding: 16px;
+  backdrop-filter: blur(10px);
+  border-left: 4px solid;
+  margin-top: 8px;
+  animation: fadeIn 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.status-message.success {
+  border-left-color: #4ecdc4;
+}
+
+.status-message.error {
+  border-left-color: #ff6b6b;
+}
+
+.status-message.processing {
+  border-left-color: #feca57;
+}
+
+.success-content,
+.error-content,
+.processing-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-emoji {
+  font-size: 1.5rem;
+}
+
+.status-text {
+  font-weight: 500;
+  flex: 1;
+  color: #ecf0f1;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.transaction-info {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  opacity: 0.9;
+  color: #ecf0f1;
+}
+
+.transaction-hash {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  background: rgba(52, 73, 94, 0.9);
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: #ecf0f1;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .eip7702-upgrader {
+    padding: 20px;
+    margin: 16px 0;
+  }
+  
+  .eip7702-upgrader .action-header h5 {
+    font-size: 1.3rem;
+  }
+  
+  .feature-list {
+    grid-template-columns: 1fr;
+  }
+  
+  .action-btn {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+  }
+  
+  .status-value.address,
+  .status-value.implementation-address {
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .eip7702-upgrader {
+    padding: 16px;
+    margin: 12px 0;
+  }
+  
+  .status-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .status-label {
+    font-size: 0.8rem;
+  }
+  
+  .action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
