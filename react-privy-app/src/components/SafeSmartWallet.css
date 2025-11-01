@@ -198,6 +198,177 @@
   border-color: #667eea;
 }
 
+/* 多钱包地址输入区域样式 */
+.address-input-section {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+  border-left: 4px solid #667eea;
+}
+
+.address-input-section h5 {
+  margin: 0 0 8px 0;
+  color: #2c3e50;
+  font-size: 1.1rem;
+}
+
+.input-description {
+  color: #7f8c8d;
+  margin: 0 0 16px 0;
+  font-size: 0.9rem;
+}
+
+.address-input-container {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.address-input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-family: 'Courier New', monospace;
+}
+
+.address-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+.address-input::placeholder {
+  color: #bdc3c7;
+}
+
+.add-address-btn {
+  background: #27ae60;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.add-address-btn:hover:not(:disabled) {
+  background: #219a52;
+  transform: translateY(-1px);
+}
+
+.add-address-btn:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 地址列表样式 */
+.address-list {
+  margin-bottom: 20px;
+}
+
+.address-list h6 {
+  margin: 0 0 12px 0;
+  color: #2c3e50;
+  font-size: 1rem;
+}
+
+.address-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.address-tag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+}
+
+.address-text {
+  font-family: 'Courier New', monospace;
+  color: #2c3e50;
+}
+
+.remove-address-btn {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.remove-address-btn:hover {
+  background: #c0392b;
+  transform: scale(1.1);
+}
+
+/* 阈值设置样式 */
+.threshold-section {
+  background: white;
+  border-radius: 6px;
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+}
+
+.threshold-section label {
+  display: block;
+  margin-bottom: 8px;
+  color: #2c3e50;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.threshold-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.threshold-input {
+  width: 60px;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.threshold-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.threshold-info {
+  color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
+.threshold-description {
+  margin: 0;
+  color: #27ae60;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
 .add-owner-btn {
   background: #27ae60;
   color: white;
@@ -299,12 +470,84 @@
   color: #2c3e50;
 }
 
-.tx-status {
-  background: #f39c12;
+.tx-status-btn {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
   color: white;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 0.75rem;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 80px;
+}
+
+.tx-status-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ff5252, #d63031);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(255, 107, 107, 0.3);
+}
+
+.tx-status-btn:disabled {
+  background: #adb5bd;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* 发送交易区域 */
+.send-transaction-section {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  border-left: 4px solid #3498db;
+}
+
+.send-transaction-section h5 {
+  margin: 0 0 12px 0;
+  color: #2c3e50;
+}
+
+.transaction-description {
+  color: #7f8c8d;
+  margin: 0 0 16px 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.send-transaction-btn {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 12px;
+  width: 100%;
+  max-width: 200px;
+}
+
+.send-transaction-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.send-transaction-btn:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.transaction-note {
+  color: #7f8c8d;
+  font-size: 0.8rem;
+  margin: 0;
+  line-height: 1.3;
 }
 
 /* 响应式设计 */
@@ -324,5 +567,9 @@
   
   .threshold-controls {
     justify-content: center;
+  }
+  
+  .send-transaction-btn {
+    max-width: 100%;
   }
 }
