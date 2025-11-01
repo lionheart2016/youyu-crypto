@@ -68,7 +68,7 @@ const SafeSmartWallet = ({
   };
 
   // 创建 Safe 智能钱包
-  const createSafeWallet = async () => {
+  const signTransaction = async () => {
     if (!activeWallet?.address) {
       setError('请先激活一个钱包');
       return;
@@ -95,6 +95,7 @@ const SafeSmartWallet = ({
 
       console.log("provider: ", provider)
 
+      //这里是已经有 safe 钱包的情况
       const newSafeClient = await createSafeClient({
         provider: provider,
         signer,
@@ -124,6 +125,46 @@ const SafeSmartWallet = ({
       setIsCreating(false);
     }
   };
+
+  const createSafeWallet = async () => {
+    if (!activeWallet?.address) {
+      setError('请先激活一个钱包');
+      return;
+    }
+
+    const provider = await getProvider();
+    const network = getCurrentNetwork();
+
+
+    const safeClient = await createSafeClient({
+        provider: provider,
+        signer: activeWallet?.address,
+        safeOptions: {
+          owners: [activeWallet?.address],
+          threshold: 1
+        },
+        apiKey: network.apiKey
+      })
+
+      const safeAddress = await safeClient.getAddress()
+      setSafeAddress(safeAddress)
+      console.log("safeAddress: ", safeAddress)
+
+      const transactions = [{
+        to: "0x0000000000000000000000000000000000000000",
+        data: '0x',
+        value: '0'
+      }]
+
+      const txResult = await safeClient.send({ transactions })
+
+      const safeTxHash = txResult.transactions?.safeTxHash
+      console.log("safeTxHash: ", safeTxHash)
+
+
+    
+  }
+
 
   // 加载现有的 Safe 钱包信息
   const loadSafeInfo = async () => {
