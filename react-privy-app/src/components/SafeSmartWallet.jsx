@@ -4,11 +4,6 @@ import SafeApiKit from '@safe-global/api-kit';
 import { createSafeClient } from '@safe-global/sdk-starter-kit';
 import { sepolia } from 'viem/chains';
 import { createWalletClient, custom } from 'viem';
-import Safe, {
-  PredictedSafeProps,
-  SafeAccountConfig,
-  SafeDeploymentConfig
-} from '@safe-global/protocol-kit'
 
 
 

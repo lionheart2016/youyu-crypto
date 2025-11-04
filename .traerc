@@ -1,0 +1,10 @@
+{
+  "packageManager": "yarn",
+  "preferredPackageManager": "yarn",
+  "scripts": {
+    "install": "yarn install",
+    "dev": "yarn dev",
+    "build": "yarn build",
+    "start": "yarn start"
+  }
+}

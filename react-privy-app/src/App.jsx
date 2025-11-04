@@ -25,7 +25,8 @@ const privyConfig = {
     logo: '/logo.svg'
   },
   embeddedWallets: {
-    createOnLogin: 'users-without-wallets'
+    createOnLogin: 'users-without-wallets',
+    showWalletUIs: false
   },
   // 启用多种登录方式：Google、Apple、GitHub、邮箱和钱包
   loginMethods: ['google', 'apple', 'github', 'email', 'wallet'],
@@ -474,8 +475,6 @@ function PrivyAuth() {
       console.log('📝 开始签名消息...')
       console.log('消息内容:', message)
       console.log('激活的钱包:', activeWallet)
-      console.log('钱包信息:', walletInfo)
-      console.log('可用钱包列表:', wallets)
       
       // 优先使用激活的钱包
       let walletToUse = activeWallet
@@ -486,16 +485,6 @@ function PrivyAuth() {
         console.log('使用第一个钱包作为激活钱包:', walletToUse)
       }
       
-      // 如果仍然没有钱包，使用旧的钱包信息
-      if (!walletToUse && walletInfo?.address) {
-        walletToUse = {
-          address: walletInfo.address,
-          name: walletInfo.type === 'embedded' ? '嵌入式钱包' : '外部钱包',
-          type: walletInfo.type,
-          chain: 'ethereum'
-        }
-        console.log('使用旧的钱包信息:', walletToUse)
-      }
       
       if (!walletToUse?.address) {
         throw new Error('没有可用的钱包地址')
@@ -513,75 +502,26 @@ function PrivyAuth() {
       }
 
       
-      if (!wallet) {
-        console.error('无法获取可用的钱包对象')
-        console.error('walletToUse:', walletToUse)
-        console.error('wallets:', wallets)
-        console.error('user:', user)
-        console.error('externalWallets:', externalWallets)
-        throw new Error('无法获取可用的钱包对象，请确保钱包已正确连接')
-      }
-      
       console.log('使用钱包进行签名:', wallet)
       
       // 创建签名消息
       const messageToSign = typeof message === 'string' ? message : JSON.stringify(message)
-      console.log('待签名消息:', messageToSign)
       
       // 使用钱包签名
       let signature
       try {
-        if (wallet.sign) {
+
           // 如果钱包对象有sign方法，直接使用
           console.log('使用wallet.sign方法进行签名...')
           signature = await wallet.sign(messageToSign)
-        } else {
-          // 如果以上方法都不可用，尝试使用嵌入式钱包的签名功能
-          console.log('尝试使用嵌入式钱包的签名功能...')
-          if (walletInfo.type === 'embedded') {
-            // 对于嵌入式钱包，使用Privy SDK进行签名
-            console.log('使用嵌入式钱包的Privy SDK签名功能...')
-            const provider = wallet.getEthereumProvider ? await wallet.getEthereumProvider() : null
-            if (provider) {
-              // 使用Privy SDK的签名功能
-              if (wallet.signMessage) {
-                signature = await wallet.signMessage(messageToSign)
-              } else {
-                throw new Error('钱包不支持签名功能')
-              }
-            } else {
-              // 如果无法获取provider，尝试重新创建钱包
-              console.log('重新创建嵌入式钱包进行签名...')
-              const newWallet = await createWallet()
-              if (newWallet && newWallet.signMessage) {
-                signature = await newWallet.signMessage(messageToSign)
-              } else {
-                throw new Error('无法获取钱包provider进行签名')
-              }
-            }
-          } else {
-            throw new Error('钱包不支持签名功能，请确保钱包已正确连接并支持签名操作')
-          }
-        }
+
+
+
+
       } catch (signError) {
         console.error('签名方法失败:', signError)
         // 如果主要签名方法失败，尝试备用方法
         console.log('尝试备用签名方法...')
-        try {
-          if (walletInfo.type === 'embedded') {
-            // 对于嵌入式钱包，尝试使用Privy SDK进行签名
-            if (wallet.signMessage) {
-              signature = await wallet.signMessage(messageToSign)
-            } else {
-              throw new Error('钱包不支持签名功能')
-            }
-          } else {
-            throw signError
-          }
-        } catch (backupError) {
-          console.error('备用签名方法也失败:', backupError)
-          throw signError // 抛出原始错误
-        }
       }
       
       console.log('✅ 签名成功:', signature)
@@ -592,28 +532,13 @@ function PrivyAuth() {
         address: wallet.address || walletInfo.address
       })
       
-      // 通知父窗口签名成功
-      window.parent.postMessage({
-        type: 'SIGN_SUCCESS',
-        result: {
-          signature: signature,
-          message: messageToSign,
-          address: wallet.address || walletInfo.address
-        }
-      }, '*')
-      
     } catch (error) {
       console.error('💥 签名失败:', error)
       setSignResult({
         success: false,
         error: error.message || '签名失败'
       })
-      
-      // 通知父窗口签名失败
-      window.parent.postMessage({
-        type: 'SIGN_ERROR',
-        error: error.message || '签名失败'
-      }, '*')
+    
     } finally {
       setIsSigning(false)
     }

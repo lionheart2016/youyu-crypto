@@ -6,7 +6,7 @@ import { encodeFunctionData, parseAbi } from 'viem';
 
 const TransactionSender = () => {
   // 获取Privy SDK功能
-  const { sendTransaction, createWallet, wallets, smartWallets } = usePrivy()
+  const { sendTransaction, createWallet, wallets } = usePrivy()
   // 交易表单状态
   const [transactionForm, setTransactionForm] = useState({
     recipient: '0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1',
@@ -77,7 +77,7 @@ const TransactionSender = () => {
     return BigInt(totalWeiStr)
   }
 
-  const { client, walletClient } = useSmartWallets();
+  const { client } = useSmartWallets();
 
   // 处理转账请求
   const handleSendTransaction = async (transactionData) => {

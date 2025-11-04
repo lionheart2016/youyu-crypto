@@ -3,6 +3,17 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  build: {
+    rollupOptions: {
+      external: (id) => {
+        // 将 wagmi 和 privy 相关的依赖标记为外部依赖
+        return id.startsWith('wagmi') || 
+               id.startsWith('@wagmi') ||
+               id.startsWith('@privy-io/react-auth') ||
+               id.startsWith('@privy-io/wagmi')
+      }
+    }
+  },
   server: {
     port: 3001,
     cors: {
@@ -29,6 +40,11 @@ export default defineConfig({
     'process.env': {},
   },
   optimizeDeps: {
+    include: [
+      'wagmi',
+      '@tanstack/react-query',
+      'viem'
+    ],
     esbuildOptions: {
       // Node.js global to browser globalThis
       define: {
